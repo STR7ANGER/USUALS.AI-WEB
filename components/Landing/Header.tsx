@@ -78,7 +78,9 @@ const Header = () => {
           </a>
           <div className="hidden h-4 w-px bg-white/20 md:block"></div>
           <a
-            href="#"
+            href="https://discord.gg/9SRxHQ2Q"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hidden items-center gap-2 rounded-md px-3 py-1.5 text-sm text-white/80 hover:text-white md:flex"
           >
             <svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">

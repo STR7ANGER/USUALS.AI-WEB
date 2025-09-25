@@ -1,28 +1,22 @@
 import React from 'react'
-import { Palette, Sparkles, Paperclip, Send } from 'lucide-react'
 
 const Chat = () => {
   return (
-    <div className="p-4">
+    <div className="p-1 pb-2">
       <div className="mx-auto max-w-5xl">
-        <div className="flex items-center gap-3 rounded-xl bg-white/5 px-4 py-3 ring-1 ring-white/10 backdrop-blur">
-          <input
-            type="text"
-            placeholder={'how about “A bird flying on the moon with a red cape”...'}
-            className="flex-1 bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none"
-          />
-          <div className="flex items-center gap-2 text-white/80">
-            <button className="p-2 hover:text-white">
-              <Palette size={18} />
-            </button>
-            <button className="p-2 hover:text-white">
-              <Sparkles size={18} />
-            </button>
-            <button className="p-2 hover:text-white">
-              <Paperclip size={18} />
-            </button>
-            <button className="ml-1 inline-flex items-center justify-center rounded-lg bg-white text-black p-2 hover:bg-white/90">
-              <Send size={16} />
+        <div className="bg-[#18191C8C] rounded-2xl p-3">
+          <div className="flex items-center gap-4">
+            <input
+              type="text"
+              placeholder='how about "A bird flying on the moon with a red cape"...'
+              className="flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none text-base"
+            />
+            {/* Send Button */}
+            <button className="p-3 transition-colors">
+              <svg width="36" height="36" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="28" height="28" rx="6" fill="#94E7ED" fillOpacity="0.15"/>
+                <path d="M12.3594 15.6406L8.70896 13.6497C7.75627 13.1302 7.76571 11.7605 8.72538 11.2672C11.3719 9.90704 14.186 8.89704 17.0973 8.26249C17.9332 8.08029 18.8885 7.70889 19.5898 8.41018C20.2911 9.11147 19.9197 10.0668 19.7375 10.9027C19.103 13.814 18.093 16.6281 16.7328 19.2746C16.2395 20.2343 14.8698 20.2437 14.3503 19.291L12.3594 15.6406ZM12.3594 15.6406L14.5651 13.4349" stroke="#94E7ED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
           </div>
         </div>

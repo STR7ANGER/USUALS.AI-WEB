@@ -3,15 +3,15 @@ import AuthButton from "../AuthButton";
 
 const Header = () => {
   return (
-    <div className="bg-black border-b border-white/10 px-6 py-3">
+    <div className="bg-[#111215]  px-6 py-3">
       <div className="flex items-center justify-between">
         {/* Left: Brand and Document Name */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             {/* Logo mark */}
             <svg
-              width="24"
-              height="24"
+              width="28"
+              height="28"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -23,11 +23,11 @@ const Header = () => {
               />
             </svg>
 
-            <span className="text-white font-semibold">Usuals</span>
+            <span className="text-white font-semibold text-lg">Usuals</span>
           </div>
           <span className="text-white/30">|</span>
           <div className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors">
-            <span className="text-sm">Untitled</span>
+            <span className="text-base">Untitled</span>
           </div>
         </div>
 
