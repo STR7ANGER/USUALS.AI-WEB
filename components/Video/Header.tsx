@@ -1,4 +1,5 @@
-import React from 'react'
+import React from "react";
+import AuthButton from "../AuthButton";
 
 const Header = () => {
   return (
@@ -9,13 +10,19 @@ const Header = () => {
           <div className="flex items-center gap-2">
             {/* Logo mark */}
             <svg
-              aria-hidden
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
-              className="h-5 w-5 text-white"
-              fill="currentColor"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <path d="M4 4h6v6H4V4zm0 10h6v6H4v-6zm10-10h6v6h-6V4zm0 10h6v6h-6v-6z" />
+              <path
+                d="M9 14.1567C9 14.6179 9.18311 15.0602 9.50909 15.3865L9.59281 15.4703C9.91917 15.7969 10.362 15.9805 10.8237 15.9805H13.1826C13.6441 15.9805 14.0866 15.7971 14.413 15.4708L14.4904 15.3934C14.8167 15.0671 15 14.6245 15 14.1631V11.7205C15 10.7595 15.779 9.98047 16.74 9.98047H19.26C20.221 9.98047 21 10.7595 21 11.7205V14.2405C21 15.2014 20.221 15.9805 19.26 15.9805H16.8306C16.3694 15.9805 15.9271 16.1636 15.6008 16.4896L15.5102 16.5801C15.1835 16.9065 15 17.3493 15 17.811V20.2405C15 21.2014 14.221 21.9805 13.26 21.9805H10.74C9.77902 21.9805 9 21.2014 9 20.2405V17.8042C9 17.3424 8.81647 16.8996 8.48982 16.5733L8.40602 16.4896C8.07976 16.1636 7.63741 15.9805 7.1762 15.9805H4.74C3.77902 15.9805 3 15.2014 3 14.2405V11.7205C3 10.7595 3.77902 9.98047 4.74 9.98047H7.26C8.22098 9.98047 9 10.7595 9 11.7205V14.1567ZM9 6.26C9 7.22098 8.22098 8 7.26 8H4.74C3.77902 8 3 7.22098 3 6.26V3.74C3 2.77902 3.77902 2 4.74 2H7.26C8.22098 2 9 2.77902 9 3.74V6.26ZM21 6.26C21 7.22098 20.221 8 19.26 8H16.74C15.779 8 15 7.22098 15 6.26V3.74C15 2.77902 15.779 2 16.74 2H19.26C20.221 2 21 2.77902 21 3.74V6.26Z"
+                fill="white"
+                fill-opacity="0.5"
+              />
             </svg>
+
             <span className="text-white font-semibold">Usuals</span>
           </div>
           <span className="text-white/30">|</span>
@@ -26,70 +33,53 @@ const Header = () => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3">
-          {/* Sparkle / magic button */}
-          <button
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] hover:bg-white/[0.12] text-white/80 transition-colors"
-            aria-label="Magic"
-            title="Magic"
-          >
-            <svg
-              aria-hidden
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="currentColor"
-            >
-              <path d="M10 3l1.5 3L15 7.5 11.5 9 10 12l-1.5-3L5 7.5 8.5 6 10 3zm8 5l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2zM6 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" />
-            </svg>
-          </button>
-
           {/* Counter pill */}
           <div className="hidden sm:flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-1.5 text-sm text-white/80">
             <svg
-              aria-hidden
-              viewBox="0 0 24 24"
-              className="h-4 w-4 text-white/70"
-              fill="currentColor"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <path d="M12 7a5 5 0 100 10 5 5 0 000-10zm0-5a1 1 0 011 1v2a1 1 0 11-2 0V3a1 1 0 011-1zm0 18a1 1 0 011 1v2a1 1 0 11-2 0v-2a1 1 0 011-1zm11-7a1 1 0 01-1 1h-2a1 1 0 110-2h2a1 1 0 011 1zM6 12a1 1 0 01-1 1H3a1 1 0 110-2h2a1 1 0 011 1zm13.657-7.657a1 1 0 010 1.414L18.9 6.515a1 1 0 11-1.414-1.415l.757-.757a1 1 0 011.414 0zM6.515 18.9a1 1 0 01-1.415 0l-.757-.757A1 1 0 115.757 16.7l.758.757a1 1 0 010 1.415zM5.1 5.1a1 1 0 011.414 0l.757.757A1 1 0 116.858 7.27l-.758-.757A1 1 0 015.1 5.1zm13.657 13.657a1 1 0 01-1.414 0l-.757-.757a1 1 0 111.414-1.414l.757.757a1 1 0 010 1.414z" />
+              <path
+                d="M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z"
+                stroke="white"
+                stroke-opacity="0.5"
+                stroke-width="1.33"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M6.86848 6.46472C7.2645 6.0687 7.4625 5.87069 7.69083 5.7965C7.89168 5.73124 8.10802 5.73124 8.30887 5.7965C8.53719 5.87069 8.7352 6.0687 9.13122 6.46472L9.53515 6.86864C9.93116 7.26466 10.1292 7.46267 10.2034 7.69099C10.2686 7.89184 10.2686 8.10819 10.2034 8.30903C10.1292 8.53736 9.93116 8.73537 9.53515 9.13138L9.13122 9.53531C8.7352 9.93132 8.53719 10.1293 8.30887 10.2035C8.10802 10.2688 7.89168 10.2688 7.69083 10.2035C7.4625 10.1293 7.2645 9.93132 6.86848 9.53531L6.46455 9.13138C6.06854 8.73537 5.87053 8.53736 5.79634 8.30903C5.73108 8.10819 5.73108 7.89184 5.79634 7.69099C5.87053 7.46267 6.06854 7.26466 6.46455 6.86864L6.86848 6.46472Z"
+                stroke="white"
+                stroke-opacity="0.5"
+                stroke-width="1.33"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
+
             <span>2000</span>
           </div>
 
           {/* Download button */}
-          <button className="inline-flex items-center gap-2 rounded-lg bg-[#F9D312] px-4 py-2 text-sm font-medium text-black hover:bg-[#F9D312]/90 transition-colors">
-            <svg
-              aria-hidden
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="currentColor"
-            >
-              <path d="M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 111.414-1.414L11 12.586V4a1 1 0 011-1z" />
-              <path d="M5 19a2 2 0 002 2h10a2 2 0 002-2v-2a1 1 0 10-2 0v2H7v-2a1 1 0 10-2 0v2z" />
-            </svg>
-            <span>Download</span>
+          <button className="inline-flex items-center gap-2 rounded-lg bg-[#F9D31226] px-4 py-2 text-sm font-medium text-black hover:bg-[#F9D312]/90 transition-colors">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12.6666 13.3337L3.33325 13.3337M3.99992 6.55393C5.03696 5.15166 6.24844 3.89221 7.60371 2.80667C7.71997 2.71355 7.85994 2.66699 7.99992 2.66699M11.9999 6.55393C10.9629 5.15166 9.7514 3.89221 8.39613 2.80667C8.27987 2.71355 8.13989 2.66699 7.99992 2.66699M7.99992 2.66699L7.99992 10.667" stroke="#F9D312" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+            <span className="text-[#F9D312]">Download</span>
           </button>
 
           {/* Avatar + caret */}
           <div className="flex items-center gap-1">
-            <button
-              className="h-9 w-9 rounded-full bg-white text-black font-medium flex items-center justify-center"
-              aria-label="Account"
-            >
-              U
-            </button>
-            <svg
-              aria-hidden
-              viewBox="0 0 24 24"
-              className="h-4 w-4 text-white/70"
-              fill="currentColor"
-            >
-              <path d="M7 10l5 5 5-5H7z" />
-            </svg>
+            <AuthButton/>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

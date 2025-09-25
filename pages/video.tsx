@@ -5,14 +5,19 @@ import Preview from '@/components/Video/Preview'
 import Chat from '@/components/Video/Chat'
 
 const VideoPage = () => {
+  const [sidebarOpen, setSidebarOpen] = React.useState(false)
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
-      <div className="flex">
-        <Sidebar />
-        <Preview />
-        <Chat />
+      <div className={`flex h-[calc(100vh-64px)] transition-all duration-300 ${sidebarOpen ? 'ml-[29rem]' : 'ml-24'}`}>
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 min-h-0">
+            <Preview />
+          </div>
+          <Chat />
+        </div>
       </div>
+      <Sidebar isOpen={sidebarOpen} setOpen={setSidebarOpen} />
     </div>
   )
 }

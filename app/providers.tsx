@@ -134,6 +134,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem("authUser");
       }
       setError(null);
+      if (isRunningInBrowser()) {
+        window.location.assign('/');
+      }
     } catch (e) {
       console.error("Logout error:", e);
     }

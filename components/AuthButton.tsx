@@ -5,7 +5,15 @@ import { useAuth } from '../hooks/useAuth'
 import UserProfile from './UserProfile'
 
 const AuthButton = () => {
+  // Avoid SSR/CSR mismatch by waiting until client mount
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => setMounted(true), [])
+
   const { login, loading, error, isAuthenticated } = useAuth()
+
+  if (!mounted) {
+    return null
+  }
 
   if (isAuthenticated) {
     return <UserProfile />
