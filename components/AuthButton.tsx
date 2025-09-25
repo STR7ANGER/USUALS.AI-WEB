@@ -1,21 +1,14 @@
 "use client"
 
-import React, { useState } from 'react'
+import React from 'react'
+import { useAuth } from '../hooks/useAuth'
+import UserProfile from './UserProfile'
 
 const AuthButton = () => {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { login, loading, error, isAuthenticated } = useAuth()
 
-  const handleLogin = () => {
-    setLoading(true)
-    setError(null)
-    
-    // Mock login process
-    setTimeout(() => {
-      setLoading(false)
-      // Uncomment the line below to simulate an error
-      // setError('Authentication failed. Please try again.')
-    }, 2000)
+  if (isAuthenticated) {
+    return <UserProfile />
   }
 
   return (
@@ -29,7 +22,7 @@ const AuthButton = () => {
       )}
       
       <button
-        onClick={handleLogin}
+        onClick={() => login()}
         disabled={loading}
         className="w-full flex items-center justify-center gap-3 px-4 py-2 text-sm font-semibold text-black bg-yellow-400 hover:bg-yellow-300 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
       >

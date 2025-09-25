@@ -1,6 +1,5 @@
 import React from "react";
 import AuthButton from "../AuthButton";
-import UserProfile from "../UserProfile";
 
 const Header = () => {
   return (
@@ -108,10 +107,9 @@ const Header = () => {
             </svg>
           </button>
 
-          {/* Keep existing auth/profile if wired */}
+          {/* Auth entry: shows login when logged out, profile when logged in */}
           <div className="hidden md:flex md:items-center md:gap-2">
             <AuthButton />
-            <UserProfile />
           </div>
         </div>
       </div>
