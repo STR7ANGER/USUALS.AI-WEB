@@ -5,7 +5,7 @@ import React from 'react'
 
 const Page = () => {
   return (
-    <div className='bg-black'>
+    <div className='bg-black text-white'>
       <Header />
       <Hilight />
       <Template />
