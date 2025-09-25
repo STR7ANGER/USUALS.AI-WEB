@@ -27,7 +27,7 @@ const Hilight = () => {
           {
             title: 'CAMERA MOVEMENT',
             subtitle: 'Dance Class Recorded From Above With Motion',
-            img: 'https://images.unsplash.com/photo-1520975922215-c8a54f1e4a3b?q=80&w=1600&auto=format&fit=crop'
+            img: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop'
           }
         ].map((card)=> (
           <article key={card.title} className="group overflow-hidden rounded-xl border border-white/10 bg-white/5">
