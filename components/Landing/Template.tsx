@@ -9,6 +9,7 @@ const Template = () => {
   const { isAuthenticated } = useAuth()
   const { templates, loading, error } = useTemplates()
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null)
+  const [videoLoaded, setVideoLoaded] = useState<{ [key: string]: boolean }>({})
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
 
   // Static templates for non-authenticated users
@@ -79,7 +80,12 @@ const Template = () => {
                         loop
                         playsInline
                         poster=""
+                        onLoadedData={() => setVideoLoaded(prev => ({ ...prev, [template.id]: true }))}
                       />
+                      {/* Loading skeleton while video loads */}
+                      {!videoLoaded[template.id] && (
+                        <div className="absolute inset-0 bg-gray-700 animate-pulse"></div>
+                      )}
                     </div>
                   </div>
                 ))}
