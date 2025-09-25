@@ -3,7 +3,7 @@ import Image from 'next/image'
 
 const Template = () => {
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6">
+    <section className="w-full px-4 pb-16 pt-8 md:px-6">
       <h2 className="mb-4 text-2xl font-extrabold tracking-wide text-yellow-400">TEMPLATES</h2>
       <div className="columns-1 gap-4 sm:columns-2 lg:columns-4 [column-fill:_balance]
       *:mb-4">

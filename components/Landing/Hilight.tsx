@@ -3,7 +3,7 @@ import Image from 'next/image'
 
 const Hilight = () => {
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
+    <section className="w-full px-4 pb-10 pt-6 md:px-6">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex gap-2">
           {['Beauty Products','Product Pitch','Tech Demo','Crypto Explainer'].map((chip)=> (
