@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import AuthButton from "../AuthButton";
 
 const Header = () => {
@@ -44,12 +45,12 @@ const Header = () => {
             >
               Explore
             </a>
-            <a
+            <Link
               className="rounded-md px-3 py-1.5 text-white/80 hover:bg-white/10 hover:text-white"
               href="/video"
             >
               Video
-            </a>
+            </Link>
             <a
               className="rounded-md px-3 py-1.5 text-white/80 hover:bg-white/10 hover:text-white"
               href="https://x.com/usualsai"
