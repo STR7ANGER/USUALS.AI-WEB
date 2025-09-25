@@ -18,11 +18,15 @@ export const useTrending = (): UseTrendingReturn => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState<boolean>(false);
+  
+  // Use ref to prevent React Strict Mode double calls only for the initial "Trending" call
+  const initialFetchCalled = useRef<boolean>(false);
 
   const fetchTrendingTemplates = useCallback(async (description: string = "Trending") => {
     console.log('🔍 fetchTrendingTemplates called:', { 
       hasToken: !!token, 
       isAuthenticated, 
+      initialFetchCalled: initialFetchCalled.current, 
       loading, 
       hasFetched,
       description
@@ -33,7 +37,13 @@ export const useTrending = (): UseTrendingReturn => {
       return;
     }
 
-    // Prevent duplicate calls only for the same description
+    // Only prevent duplicate calls for the initial "Trending" call
+    if (description === "Trending" && initialFetchCalled.current && hasFetched) {
+      console.log('🚫 Skipping duplicate initial Trending call');
+      return;
+    }
+
+    // Prevent calls if already loading
     if (loading) {
       console.log('🚫 Skipping call - already loading');
       return;
@@ -41,6 +51,12 @@ export const useTrending = (): UseTrendingReturn => {
 
     try {
       console.log('🚀 Making trending API call with description:', description);
+      
+      // Mark initial fetch as called only for "Trending"
+      if (description === "Trending") {
+        initialFetchCalled.current = true;
+      }
+      
       setLoading(true);
       setError(null);
 
@@ -65,6 +81,8 @@ export const useTrending = (): UseTrendingReturn => {
     setTrendingTemplates([]);
     setHasFetched(false);
     setError(null);
+    initialFetchCalled.current = false; // Reset the ref
+    // Don't call fetchTrendingTemplates here - let useEffect handle it
   }, []);
 
   // Reset state when authentication changes
@@ -74,6 +92,7 @@ export const useTrending = (): UseTrendingReturn => {
       setTrendingTemplates([]);
       setError(null);
       setHasFetched(false);
+      initialFetchCalled.current = false; // Reset the ref
     }
   }, [isAuthenticated, token]);
 

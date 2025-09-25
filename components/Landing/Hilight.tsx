@@ -20,6 +20,7 @@ const Hilight = () => {
   const [activeTag, setActiveTag] = useState<string>("")
   const [showSearchInput, setShowSearchInput] = useState<boolean>(false)
   const [searchValue, setSearchValue] = useState<string>("")
+  const initialFetchDone = useRef<boolean>(false)
   const [customTags, setCustomTags] = useState<string[]>([])
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
 
@@ -40,7 +41,11 @@ const Hilight = () => {
   const handleTagClick = async (tag: string) => {
     if (isAuthenticated) {
       setActiveTag(tag)
-      await fetchByDescription(tag)
+      try {
+        await fetchByDescription(tag)
+      } catch (error) {
+        console.error('Error fetching templates for tag:', tag, error)
+      }
     }
   }
 
@@ -51,7 +56,11 @@ const Hilight = () => {
       setActiveTag(newTag)
       // Replace the old custom tag with the new one (only keep one custom tag)
       setCustomTags([newTag])
-      await fetchByDescription(newTag)
+      try {
+        await fetchByDescription(newTag)
+      } catch (error) {
+        console.error('Error fetching templates for search:', newTag, error)
+      }
       setSearchValue("")
       setShowSearchInput(false)
     }
@@ -66,11 +75,17 @@ const Hilight = () => {
 
   // Initial load when authenticated
   useEffect(() => {
-    if (isAuthenticated && !activeTag && trendingTemplates.length === 0 && !trendingLoading) {
+    if (isAuthenticated && !initialFetchDone.current && !activeTag && trendingTemplates.length === 0 && !trendingLoading) {
+      initialFetchDone.current = true
       setActiveTag("Trending")
       fetchByDescription("Trending")
     }
-  }, [isAuthenticated, activeTag, trendingTemplates.length, trendingLoading, fetchByDescription])
+    
+    // Reset when not authenticated
+    if (!isAuthenticated) {
+      initialFetchDone.current = false
+    }
+  }, [isAuthenticated, activeTag, trendingTemplates.length, trendingLoading])
 
   // Default static content for logged out users
   const defaultCards: DisplayCard[] = [

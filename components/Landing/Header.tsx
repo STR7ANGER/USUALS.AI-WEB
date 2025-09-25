@@ -1,8 +1,13 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import AuthButton from "../AuthButton";
 
 const Header = () => {
+  const currentPath = usePathname();
+
   return (
     <div className="sticky top-0 z-30 w-full bg-black/75 backdrop-blur">
       {/* Announcement bar */}
@@ -39,14 +44,22 @@ const Header = () => {
             </span>
           </div>
           <nav className="hidden items-center gap-1   p-1 text-sm md:flex">
-            <a
-              className=" px-3 py-1.5 font-medium text-[#F9D312]"
-              href="#"
+            <Link
+              className={`px-3 py-1.5 font-medium ${
+                currentPath === '/' 
+                  ? 'text-[#F9D312]' 
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+              }`}
+              href="/"
             >
               Explore
-            </a>
+            </Link>
             <Link
-              className="rounded-md px-3 py-1.5 text-white/80 hover:bg-white/10 hover:text-white"
+              className={`rounded-md px-3 py-1.5 ${
+                currentPath === '/video' 
+                  ? 'text-[#F9D312]' 
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+              }`}
               href="/video"
             >
               Video
@@ -59,12 +72,16 @@ const Header = () => {
             >
               Community
             </a>
-            <a
-              className="rounded-md px-3 py-1.5 text-white/80 hover:bg-white/10 hover:text-white"
-              href="#"
+            <Link
+              className={`rounded-md px-3 py-1.5 ${
+                currentPath === '/History' || currentPath === '/history'
+                  ? 'text-[#F9D312]' 
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+              }`}
+              href="/History"
             >
               History
-            </a>
+            </Link>
           </nav>
         </div>
 
