@@ -46,13 +46,15 @@ const Header = () => {
             </a>
             <a
               className="rounded-md px-3 py-1.5 text-white/80 hover:bg-white/10 hover:text-white"
-              href="#"
+              href="/video"
             >
               Video
             </a>
             <a
               className="rounded-md px-3 py-1.5 text-white/80 hover:bg-white/10 hover:text-white"
-              href="#"
+              href="https://x.com/usualsai"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Community
             </a>
