@@ -1,10 +1,12 @@
 import React from "react";
+import { Segment } from "@/hooks/useSegments";
 
 type PromptProps = {
   onClose?: () => void;
+  segments?: Segment[];
 };
 
-const Prompt = ({ onClose }: PromptProps) => {
+const Prompt = ({ onClose, segments = [] }: PromptProps) => {
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -33,42 +35,50 @@ const Prompt = ({ onClose }: PromptProps) => {
         </button>
       </div>
 
-      {/* History Section */}
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium text-cyan-400">History</h3>
+      {/* Segments Section */}
+      <div className="space-y-6">
+        {segments.map((segment, segmentIndex) => (
+          <div key={segment.id} className="space-y-4">
+            <h3 className="text-sm font-medium text-cyan-400">
+              {segment.name}
+            </h3>
 
-        <div className="space-y-3">
-          {/* Video 3 - Highlighted */}
-          <div className="p-3 bg-white/10 rounded-lg border border-white/20 cursor-pointer hover:bg-white/15 transition-colors">
-            <h4 className="text-sm font-medium text-cyan-400 mb-2">Video 3</h4>
-            <p className="text-xs text-white leading-relaxed">
-              This is my prompt. Follow my instructions...
-            </p>
+            <div className="space-y-3">
+              {segment.videos.length === 0 ? (
+                <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                  <p className="text-xs text-white/50 leading-relaxed">
+                    No videos generated yet
+                  </p>
+                </div>
+              ) : (
+                segment.videos.map((video, videoIndex) => (
+                  <div 
+                    key={video.id} 
+                    className="p-3 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                  >
+                    <h4 className="text-sm font-medium text-white/70 mb-2">
+                      Video {videoIndex + 1}
+                    </h4>
+                    <p className="text-xs text-white leading-relaxed">
+                      {video.description}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
+        ))}
 
-          {/* Video 2 */}
-          <div className="p-3 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
-            <h4 className="text-sm font-medium text-white/70 mb-2">Video 2</h4>
-            <p className="text-xs text-white leading-relaxed">
-              An astronaut saves earth from an asteroid...
-            </p>
+        {segments.length === 0 && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-cyan-400">Segment 1</h3>
+            <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+              <p className="text-xs text-white/50 leading-relaxed">
+                Start generating videos
+              </p>
+            </div>
           </div>
-
-          {/* Video 1 */}
-          <div className="p-3 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
-            <h4 className="text-sm font-medium text-white/70 mb-2">Video 1</h4>
-            <p className="text-xs text-white leading-relaxed">
-              Sharp lunar landscape with a large crater...
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Add New Video Button */}
-      <div>
-        <button className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors">
-          + Add New Video
-        </button>
+        )}
       </div>
     </div>
   );

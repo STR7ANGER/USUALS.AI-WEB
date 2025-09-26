@@ -4,6 +4,7 @@ import Template from './sidebar/Template'
 import Prompt from './sidebar/Prompt'
 import Audio from './sidebar/Audio'
 import Setting from './sidebar/Setting'
+import { Segment } from '@/hooks/useSegments'
 
 type SidebarProps = {
   isOpen: boolean
@@ -14,11 +15,12 @@ type SidebarProps = {
     jsonPrompt: string;
     s3Key: string;
   }) => void
+  segments?: Segment[]
 }
 
 type ActiveTab = 'export' | 'template' | 'prompt' | 'audio' | 'setting'
 
-const Sidebar = ({ isOpen, setOpen, onTemplateSelect }: SidebarProps) => {
+const Sidebar = ({ isOpen, setOpen, onTemplateSelect, segments }: SidebarProps) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('template')
   return (
     <>
@@ -105,7 +107,7 @@ const Sidebar = ({ isOpen, setOpen, onTemplateSelect }: SidebarProps) => {
       {isOpen && (
         <div className="fixed left-[5rem] top-16 bottom-4 z-50 w-96 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl transition-all duration-300 ease-in-out p-6 overflow-y-auto scrollbar-hide" style={{background: 'linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)'}}>
           {activeTab === 'prompt' ? (
-            <Prompt onClose={() => setOpen(false)} />
+            <Prompt onClose={() => setOpen(false)} segments={segments} />
           ) : (
             <>
               <div className="flex items-center justify-between mb-4">

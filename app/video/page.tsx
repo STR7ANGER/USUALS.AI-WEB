@@ -260,6 +260,7 @@ const VideoPage = () => {
         isOpen={sidebarOpen} 
         setOpen={setSidebarOpen}
         onTemplateSelect={handleTemplateSelect}
+        segments={segments}
       />
       
       {/* Error Display */}
