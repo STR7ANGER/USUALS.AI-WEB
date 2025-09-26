@@ -161,20 +161,10 @@ const Hilight = () => {
           </span>
         ))}
         
-        {/* Big Search Icon - right after the tags */}
-        <div className="relative">
-          <button 
-            className="cursor-pointer p-2 text-white/80 hover:text-white transition-colors"
-            onClick={handleSearchIconClick}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-          
-          {/* Search input - appears to the right with yellow bottom border */}
+        {/* Big Search - aligned right; input inline pushes button left */}
+        <div className="ml-auto flex items-center gap-2">
           {showSearchInput && (
-            <form onSubmit={handleSearchSubmit} className="absolute top-0 left-full ml-2 z-10">
+            <form onSubmit={handleSearchSubmit}>
               <input
                 type="text"
                 value={searchValue}
@@ -183,12 +173,19 @@ const Hilight = () => {
                 className="bg-black border-0 border-b-2 border-yellow-400 px-3 py-2 text-sm text-white placeholder-white/60 focus:outline-none focus:border-b-yellow-400 min-w-[200px]"
                 autoFocus
                 onBlur={() => {
-                  // Close input after a short delay to allow form submission
                   setTimeout(() => setShowSearchInput(false), 200)
                 }}
               />
             </form>
           )}
+          <button 
+            className="cursor-pointer p-2 text-white/80 hover:text-white transition-colors"
+            onClick={handleSearchIconClick}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
         </div>
       </div>
 

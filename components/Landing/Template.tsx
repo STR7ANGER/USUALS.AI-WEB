@@ -7,7 +7,7 @@ import { useTemplates } from '../../hooks/useTemplates'
 
 const Template = () => {
   const { isAuthenticated } = useAuth()
-  const { templates, loading, error } = useTemplates()
+  const { templates, loading, error, loadMore, hasMore } = useTemplates()
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null)
   const [videoLoaded, setVideoLoaded] = useState<{ [key: string]: boolean }>({})
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
@@ -90,6 +90,17 @@ const Template = () => {
                   </div>
                 ))}
               </div>
+              {hasMore && (
+                <div className="flex justify-center mt-6">
+                  <button
+                    onClick={loadMore}
+                    disabled={loading}
+                    className="px-4 py-2 rounded-md border border-yellow-400 bg-yellow-400/20 text-yellow-400 hover:bg-yellow-400/30 disabled:opacity-50"
+                  >
+                    {loading ? 'Loading...' : 'Load More'}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </>

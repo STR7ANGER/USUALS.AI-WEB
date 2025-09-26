@@ -14,6 +14,7 @@ export interface TemplatesResponse {
   total: number;
   page: number;
   limit: number;
+  totalPages?: number;
   hasMore: boolean;
 }
 
@@ -24,13 +25,16 @@ export interface TrendingTemplatesResponse {
 
 export interface FetchTemplatesParams {
   token: string;
+  page?: number;
+  limit?: number;
 }
 
 export class TemplateService {
   private static baseUrl = `${API_BASE_URL}/video-templates`;
 
-  static async fetchTemplates({ token }: FetchTemplatesParams): Promise<VideoTemplate[]> {
+  static async fetchTemplates({ token, page = 1, limit = 12 }: FetchTemplatesParams): Promise<TemplatesResponse> {
     try {
+      // Single request: do not add pagination params; backend may still support them, but we intentionally fetch all
       console.log('🌐 TemplateService: Making API call to', this.baseUrl);
       const response = await fetch(this.baseUrl, {
         method: 'GET',
@@ -48,9 +52,15 @@ export class TemplateService {
       }
 
       const data = await response.json();
-      
-      // Handle both array response and object response
-      return Array.isArray(data) ? data : (data.templates || data.data || []);
+      // Normalize response to TemplatesResponse
+      if (Array.isArray(data)) {
+        const total = data.length;
+        return { templates: data, total, page: 1, limit: total, totalPages: 1, hasMore: false };
+      }
+      const templates: VideoTemplate[] = data.templates || data.data || [];
+      const total: number = data.total ?? templates.length;
+      // Treat as single-shot: report that all are included
+      return { templates, total, page: 1, limit: total, totalPages: 1, hasMore: false };
     } catch (error) {
       console.error('Error fetching templates:', error);
       throw error;
