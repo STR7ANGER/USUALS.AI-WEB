@@ -13,7 +13,13 @@ const Template = () => {
   const { templates, loading, error, loadMore, hasMore } = useTemplates()
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null)
   const [videoLoaded, setVideoLoaded] = useState<{ [key: string]: boolean }>({})
+  const [mounted, setMounted] = useState(false)
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
+
+  // Ensure component is mounted on client side to prevent hydration mismatch
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Static templates for non-authenticated users
   const staticTemplates = [
@@ -42,8 +48,9 @@ const Template = () => {
     }
   }
 
-  const handleTemplateClick = async () => {
+  const handleTemplateClick = async (template: any) => {
     try {
+      console.log('🎬 Template: Template clicked:', template)
       const now = new Date()
       const name = `Web Project: ${now.toLocaleString()}`
       const description = 'web project'
@@ -56,12 +63,57 @@ const Template = () => {
         description,
       })
       const projectId = project.id
-      router.push(`/video?projectId=${encodeURIComponent(projectId)}&name=${encodeURIComponent(name)}`)
+      
+      // Build URL parameters for template data
+      const params = new URLSearchParams({
+        projectId: projectId,
+        name: name
+      })
+      
+      // Include video URL if available
+      if (template.s3Key) {
+        console.log('🎬 Template: Adding videoUrl to params:', template.s3Key)
+        params.append('videoUrl', template.s3Key)
+      } else {
+        console.log('🎬 Template: No videoUrl available for template')
+      }
+      
+      // Include template description if available
+      if (template.description) {
+        params.append('templateDescription', template.description)
+      }
+      
+      // Include template ID if available (for fetching jsonPrompt)
+      if (template.id) {
+        params.append('templateId', template.id)
+      }
+      
+      const finalUrl = `/video?${params.toString()}`
+      console.log('🎬 Template: Navigating to:', finalUrl)
+      router.push(finalUrl)
     } catch (e) {
       console.error('Failed to create project from template click', e)
     }
   }
 
+
+  // Show loading state until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <section className="w-full px-4 pb-16 pt-8 md:px-6">
+        <h2 className="mb-4 text-2xl font-extrabold tracking-wide text-yellow-400">TEMPLATES</h2>
+        <div className="grid grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="overflow-hidden rounded-xl border border-white/10 bg-white/5">
+              <div className="relative aspect-[16/9] w-full">
+                <div className="h-full w-full bg-gray-700 animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="w-full px-4 pb-16 pt-8 md:px-6">
@@ -89,7 +141,7 @@ const Template = () => {
                   <div 
                     key={template.id} 
                     className="overflow-hidden rounded-xl border border-white/10 bg-white/5 cursor-pointer transition-transform hover:scale-105"
-                    onClick={() => handleTemplateClick()}
+                    onClick={() => handleTemplateClick(template)}
                     onMouseEnter={() => handleVideoHover(template.id, true)}
                     onMouseLeave={() => handleVideoHover(template.id, false)}
                   >
