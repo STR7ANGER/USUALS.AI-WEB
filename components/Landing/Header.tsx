@@ -2,14 +2,35 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import AuthButton from "../AuthButton";
 import { useAuth } from "@/hooks/useAuth";
+import { ProjectService } from "@/services/project";
 
 const Header = () => {
   const currentPath = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token, login } = useAuth();
+
+  const handleVideoNavClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    try {
+      e.preventDefault();
+      const now = new Date();
+      const name = `Web Project: ${now.toLocaleString()}`;
+      const description = "web project";
+      if (!isAuthenticated || !token) {
+        await Promise.resolve(login());
+        return;
+      }
+      const project = await ProjectService.createProject(token, { name, description });
+      const projectId = project.id;
+      router.push(`/video?projectId=${encodeURIComponent(projectId)}&name=${encodeURIComponent(name)}`);
+    } catch (error) {
+      console.error("Failed to create project from header Video click", error);
+      router.push("/video");
+    }
+  };
 
   React.useEffect(() => {
     setMounted(true);
@@ -69,6 +90,7 @@ const Header = () => {
                     : 'text-white/80 hover:bg-white/10 hover:text-white'
                 }`}
                 href="/video"
+                onClick={handleVideoNavClick}
               >
                 Video
               </Link>

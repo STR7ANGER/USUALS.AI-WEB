@@ -1,7 +1,10 @@
 import React from "react";
+import { useRouter } from 'next/router'
 import AuthButton from "../AuthButton";
 
 const Header = () => {
+  const router = useRouter()
+  const projectName = typeof router.query.name === 'string' ? router.query.name : 'Untitled'
   return (
     <div className="bg-[#111215]  px-6 py-3">
       <div className="flex items-center justify-between">
@@ -27,7 +30,7 @@ const Header = () => {
           </div>
           <span className="text-white/30">|</span>
           <div className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors">
-            <span className="text-base">Untitled</span>
+            <span className="text-base">{projectName}</span>
           </div>
         </div>
 

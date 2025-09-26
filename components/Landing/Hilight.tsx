@@ -1,8 +1,10 @@
 "use client"
 import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '../../hooks/useAuth'
 import { useTrending } from '../../hooks/useTrending'
+import { ProjectService } from '@/services/project'
 
 interface DisplayCard {
   id?: string
@@ -13,7 +15,8 @@ interface DisplayCard {
 }
 
 const Hilight = () => {
-  const { isAuthenticated } = useAuth()
+  const router = useRouter()
+  const { isAuthenticated, token, login } = useAuth()
   const { trendingTemplates, loading: trendingLoading, fetchByDescription } = useTrending()
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null)
   const [videoLoaded, setVideoLoaded] = useState<{ [key: string]: boolean }>({})
@@ -35,6 +38,26 @@ const Hilight = () => {
         video.pause()
         video.currentTime = 0
       }
+    }
+  }
+
+  const handleCardClick = async (_card: DisplayCard) => {
+    try {
+      const now = new Date()
+      const name = `Web Project: ${now.toLocaleString()}`
+      const description = 'web project'
+      if (!isAuthenticated || !token) {
+        await Promise.resolve(login())
+        return
+      }
+      const project = await ProjectService.createProject(token, {
+        name,
+        description,
+      })
+      const projectId = project.id
+      router.push(`/video?projectId=${encodeURIComponent(projectId)}&name=${encodeURIComponent(name)}`)
+    } catch (e) {
+      console.error('Failed to create project from hilight click', e)
     }
   }
 
@@ -205,7 +228,7 @@ const Hilight = () => {
           ))
         ) : (
           displayCards.map((card, index) => (
-            <article key={card.id || card.title} className="group overflow-hidden rounded-xl border border-white/10 bg-white/5">
+            <article key={card.id || card.title} className="group overflow-hidden rounded-xl border border-white/10 bg-white/5 cursor-pointer" onClick={() => handleCardClick(card)}>
               <div 
                 className="relative aspect-[16/9] w-full cursor-pointer"
                 onMouseEnter={() => card.videoUrl && handleVideoHover(card.id || card.title, true)}

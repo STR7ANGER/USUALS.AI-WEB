@@ -2,11 +2,14 @@
 
 import React, { useState, useRef } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '../../hooks/useAuth'
 import { useTemplates } from '../../hooks/useTemplates'
+import { ProjectService } from '@/services/project'
 
 const Template = () => {
-  const { isAuthenticated } = useAuth()
+  const router = useRouter()
+  const { isAuthenticated, token, login } = useAuth()
   const { templates, loading, error, loadMore, hasMore } = useTemplates()
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null)
   const [videoLoaded, setVideoLoaded] = useState<{ [key: string]: boolean }>({})
@@ -39,6 +42,26 @@ const Template = () => {
     }
   }
 
+  const handleTemplateClick = async () => {
+    try {
+      const now = new Date()
+      const name = `Web Project: ${now.toLocaleString()}`
+      const description = 'web project'
+      if (!isAuthenticated || !token) {
+        await Promise.resolve(login())
+        return
+      }
+      const project = await ProjectService.createProject(token, {
+        name,
+        description,
+      })
+      const projectId = project.id
+      router.push(`/video?projectId=${encodeURIComponent(projectId)}&name=${encodeURIComponent(name)}`)
+    } catch (e) {
+      console.error('Failed to create project from template click', e)
+    }
+  }
+
 
   return (
     <section className="w-full px-4 pb-16 pt-8 md:px-6">
@@ -66,6 +89,7 @@ const Template = () => {
                   <div 
                     key={template.id} 
                     className="overflow-hidden rounded-xl border border-white/10 bg-white/5 cursor-pointer transition-transform hover:scale-105"
+                    onClick={() => handleTemplateClick()}
                     onMouseEnter={() => handleVideoHover(template.id, true)}
                     onMouseLeave={() => handleVideoHover(template.id, false)}
                   >

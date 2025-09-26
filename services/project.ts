@@ -102,4 +102,31 @@ export class ProjectService {
       throw error;
     }
   }
+
+  static async createProject(
+    token: string,
+    body: { name: string; description: string; templateId?: string }
+  ): Promise<Project> {
+    try {
+      const response = await fetch(`${this.baseUrl}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create project: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      return data.project || data.data || data;
+    } catch (error) {
+      console.error('Error creating project:', error);
+      throw error;
+    }
+  }
 }
