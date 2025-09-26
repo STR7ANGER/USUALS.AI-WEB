@@ -103,7 +103,7 @@ const Sidebar = ({ isOpen, setOpen, onTemplateSelect }: SidebarProps) => {
 
       {/* Expanded drawer (appears to the right of the rail) */}
       {isOpen && (
-        <div className="fixed left-[5rem] top-16 bottom-4 z-50 w-96 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl transition-all duration-300 ease-in-out p-6 overflow-y-auto" style={{background: 'linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)'}}>
+        <div className="fixed left-[5rem] top-16 bottom-4 z-50 w-96 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl transition-all duration-300 ease-in-out p-6 overflow-y-auto scrollbar-hide" style={{background: 'linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)'}}>
           {activeTab === 'prompt' ? (
             <Prompt onClose={() => setOpen(false)} />
           ) : (

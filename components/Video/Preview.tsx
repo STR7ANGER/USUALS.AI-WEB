@@ -9,6 +9,7 @@ interface PreviewProps {
   generatedVideos?: Array<{
     s3Key: string;
     description: string;
+    isTemplate?: boolean;
   }>;
   currentVideoIndex?: number;
   onNavigateVideo?: (direction: 'next' | 'prev') => void;
@@ -28,7 +29,7 @@ const Preview = ({
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(true); // Always start muted
   const [isHovered, setIsHovered] = useState(false);
 
   // Determine which video to display
@@ -243,6 +244,7 @@ const Preview = ({
                   </p>
                   {currentVideo && (
                     <p className="text-xs mt-2 text-white/40">
+                      {currentVideo.isTemplate ? '📋 ' : '🎬 '}
                       Video {currentVideoIndex + 1} of {generatedVideos.length}: {currentVideo.description}
                     </p>
                   )}
@@ -266,11 +268,12 @@ const Preview = ({
               </div>
             )}
 
-            {/* Top Right - Audio Toggle Button */}
-            <button
-              onClick={toggleMute}
-              className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm"
-            >
+            {/* Top Right - Audio Toggle Button - Only show when there's a video */}
+            {displayVideoUrl && (
+              <button
+                onClick={toggleMute}
+                className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm"
+              >
               {isMuted ? (
                 <svg
                   width="20"
@@ -314,14 +317,16 @@ const Preview = ({
                   />
                 </svg>
               )}
-            </button>
+              </button>
+            )}
 
             
 
-            {/* Central Controls */}
-            <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center space-x-6 transition-opacity duration-300 ${
-              !isPlaying || isHovered ? 'opacity-100' : 'opacity-0'
-            }`}>
+            {/* Central Controls - Only show when there's a video to play */}
+            {displayVideoUrl && (
+              <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center space-x-6 transition-opacity duration-300 ${
+                !isPlaying || isHovered ? 'opacity-100' : 'opacity-0'
+              }`}>
               {/* Rewind 10s */}
               <button
                 onClick={rewind}
@@ -424,20 +429,24 @@ const Preview = ({
                   />
                 </svg>
               </button>
-            </div>
+              </div>
+            )}
 
-            {/* Bottom Left - Time Display */}
-            <div className="absolute bottom-4 left-4 flex items-center space-x-2 text-white text-sm bg-black/50 rounded-lg px-3 py-1 backdrop-blur-sm">
-              <span>{formatTime(currentTime)}</span>
-              <span className="text-white/40">|</span>
-              <span className="text-white/70">{formatTime(duration)}</span>
-            </div>
+            {/* Bottom Left - Time Display - Only show when there's a video */}
+            {displayVideoUrl && (
+              <div className="absolute bottom-4 left-4 flex items-center space-x-2 text-white text-sm bg-black/50 rounded-lg px-3 py-1 backdrop-blur-sm">
+                <span>{formatTime(currentTime)}</span>
+                <span className="text-white/40">|</span>
+                <span className="text-white/70">{formatTime(duration)}</span>
+              </div>
+            )}
 
-            {/* Bottom Right - Fullscreen Button */}
-            <button
-              onClick={toggleFullscreen}
-              className="absolute bottom-4 right-4 w-8 h-8 bg-black/50 hover:bg-black/70 rounded flex items-center justify-center transition-colors backdrop-blur-sm"
-            >
+            {/* Bottom Right - Fullscreen Button - Only show when there's a video */}
+            {displayVideoUrl && (
+              <button
+                onClick={toggleFullscreen}
+                className="absolute bottom-4 right-4 w-8 h-8 bg-black/50 hover:bg-black/70 rounded flex items-center justify-center transition-colors backdrop-blur-sm"
+              >
               {isFullscreen ? (
                 <svg
                   width="24"
@@ -478,7 +487,8 @@ const Preview = ({
                   />
                 </svg>
               )}
-            </button>
+              </button>
+            )}
           </div>
         </div>
       </div>

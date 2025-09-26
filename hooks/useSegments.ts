@@ -199,10 +199,13 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
 
       setSegments(prev => prev.map(s => {
         if (s.id === segmentId) {
+          const hasTemplate = !!s.template;
+          const newVideoIndex = s.videos.length + (hasTemplate ? 1 : 0); // Account for template being first
+          
           return {
             ...s,
             videos: [...s.videos, newVideo],
-            currentVideoIndex: s.videos.length // Point to the new video
+            currentVideoIndex: newVideoIndex // Point to the new video
           };
         }
         return s;
@@ -220,20 +223,26 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
 
   const navigateVideo = useCallback((segmentId: string, direction: 'next' | 'prev') => {
     setSegments(prev => prev.map(segment => {
-      if (segment.id === segmentId && segment.videos.length > 1) {
-        const currentIndex = segment.currentVideoIndex;
-        let newIndex: number;
+      if (segment.id === segmentId) {
+        // Calculate total videos including template (if exists)
+        const hasTemplate = !!segment.template;
+        const totalVideos = segment.videos.length + (hasTemplate ? 1 : 0);
+        
+        if (totalVideos > 1) {
+          const currentIndex = segment.currentVideoIndex;
+          let newIndex: number;
 
-        if (direction === 'next') {
-          newIndex = currentIndex >= segment.videos.length - 1 ? 0 : currentIndex + 1;
-        } else {
-          newIndex = currentIndex <= 0 ? segment.videos.length - 1 : currentIndex - 1;
+          if (direction === 'next') {
+            newIndex = currentIndex >= totalVideos - 1 ? 0 : currentIndex + 1;
+          } else {
+            newIndex = currentIndex <= 0 ? totalVideos - 1 : currentIndex - 1;
+          }
+
+          return {
+            ...segment,
+            currentVideoIndex: newIndex
+          };
         }
-
-        return {
-          ...segment,
-          currentVideoIndex: newIndex
-        };
       }
       return segment;
     }));

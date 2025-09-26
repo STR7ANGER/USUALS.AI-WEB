@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSegments } from '@/hooks/useSegments'
 import { VideoTemplate, TemplateService } from '@/services/template'
 import { VideoGenerationService } from '@/services/video-generation'
+import { getVideoUrl } from '@/lib/video-utils'
 import Header from '@/components/Video/Header'
 import Sidebar from '@/components/Video/Sidebar'
 import Preview from '@/components/Video/Preview'
@@ -170,16 +171,30 @@ const VideoPage = () => {
     name: segment.name,
     isActive: segment.isActive,
     hasTemplate: !!segment.template,
-    videoCount: segment.videos.length
+    videoCount: segment.videos.length,
+    templateVideoUrl: segment.template ? getVideoUrl(segment.template.s3Key) : undefined
   }))
 
-  // Prepare preview data
-  const currentVideo = activeSegment?.videos[activeSegment.currentVideoIndex]
-  const previewVideoUrl = activeSegment?.template?.s3Key
+  // Prepare preview data - include template video as first item if it exists
+  const templateVideo = activeSegment?.template ? {
+    s3Key: activeSegment.template.s3Key,
+    description: `Template: ${activeSegment.template.description}`,
+    isTemplate: true
+  } : null
+
   const generatedVideos = activeSegment?.videos.map(video => ({
     s3Key: video.s3Key,
-    description: video.description
+    description: video.description,
+    isTemplate: false
   })) || []
+
+  // Combine template video with generated videos
+  const allVideos = templateVideo ? [templateVideo, ...generatedVideos] : generatedVideos
+  const currentVideoIndex = activeSegment?.currentVideoIndex || 0
+  
+  // Adjust index to account for template video being first
+  const adjustedIndex = templateVideo ? currentVideoIndex : Math.max(0, currentVideoIndex - 1)
+  const previewVideoUrl = activeSegment?.template?.s3Key
 
   return (
     <div className="min-h-screen bg-[#111215] text-white">
@@ -191,8 +206,8 @@ const VideoPage = () => {
               videoUrl={previewVideoUrl}
               templateDescription={activeSegment?.template?.description}
               templateJsonPrompt={activeSegment?.template?.jsonPrompt}
-              generatedVideos={generatedVideos}
-              currentVideoIndex={activeSegment?.currentVideoIndex || 0}
+              generatedVideos={allVideos}
+              currentVideoIndex={currentVideoIndex}
               onNavigateVideo={handleVideoNavigation}
             />
           </div>

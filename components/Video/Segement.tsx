@@ -6,6 +6,7 @@ interface SegmentCardData {
   isActive: boolean
   hasTemplate: boolean
   videoCount: number
+  templateVideoUrl?: string
 }
 
 interface SegementProps {
@@ -33,9 +34,35 @@ const Segement = ({ segments, onSelectSegment, onCreateSegment, canCreateSegment
             }`}
           >
             {/* Segment Content */}
-            <div className="w-full h-full flex flex-col items-center justify-center p-2">
-              {segment.hasTemplate ? (
-                // Template selected - show play icon with video count
+            <div className="w-full h-full flex flex-col items-center justify-center p-2 relative overflow-hidden">
+              {segment.hasTemplate && segment.templateVideoUrl ? (
+                // Template selected - show video thumbnail
+                <div className="w-full h-full relative">
+                  <video
+                    src={segment.templateVideoUrl}
+                    className="w-full h-full object-cover rounded"
+                    muted
+                    loop
+                    playsInline
+                    poster=""
+                  />
+                  {/* Play overlay */}
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 5V19L19 12L8 5Z" fill="white" fillOpacity="0.9"/>
+                    </svg>
+                  </div>
+                  {/* Video count badge */}
+                  {segment.videoCount > 0 && (
+                    <div className="absolute bottom-1 right-1 bg-black/70 rounded px-1 py-0.5">
+                      <span className="text-xs text-white font-medium">
+                        {segment.videoCount}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : segment.hasTemplate ? (
+                // Template selected but no video URL - show play icon
                 <div className="flex flex-col items-center justify-center h-full">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 5V19L19 12L8 5Z" fill="white" fillOpacity="0.8"/>

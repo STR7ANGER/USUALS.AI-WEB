@@ -215,7 +215,7 @@ const Template = ({ onTemplateSelect }: TemplateProps) => {
                       videoRefs.current[card.id || card.title] = el
                     }}
                     src={card.videoUrl}
-                    muted
+                    muted={true}
                     loop
                     playsInline
                     className="h-full w-full object-cover"
