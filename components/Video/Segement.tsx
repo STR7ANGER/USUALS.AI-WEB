@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { SegmentService, Segment } from '@/services/segment'
 
@@ -23,44 +23,58 @@ const Segement = ({ projectId, initialTemplateData }: SegementProps) => {
   const { token } = useAuth()
   const [segments, setSegments] = useState<SegmentCard[]>([])
   const [loading, setLoading] = useState(false)
+  const hasCreatedInitialSegmentRef = useRef(false)
   const maxCards = 5
 
-  // Initialize segments and create backend segment if needed
+  // Initialize segments - run only once when we have all required data
   useEffect(() => {
-    const initializeSegments = async () => {
-      if (initialTemplateData) {
-        // If we have template data, try to create backend segment first
-        if (projectId && token) {
-          try {
-            setLoading(true)
-            const newSegment = await SegmentService.createSegment(token, {
-              type: 'web',
-              description: 'web',
-              projectId: projectId
-            })
+    // Prevent multiple initializations using ref (doesn't trigger re-renders)
+    if (hasCreatedInitialSegmentRef.current) {
+      console.log('🎬 Segment: Already created initial segment, skipping')
+      return
+    }
 
-            setSegments([{
-              id: newSegment.id,
-              type: 'template',
-              videoUrl: initialTemplateData.videoUrl,
-              description: initialTemplateData.description,
-              templateId: initialTemplateData.templateId
-            }])
-          } catch (error) {
-            console.error('Failed to create initial segment:', error)
-            // Fallback to template segment without backend
-            setSegments([{
-              id: '1',
-              type: 'template',
-              videoUrl: initialTemplateData.videoUrl,
-              description: initialTemplateData.description,
-              templateId: initialTemplateData.templateId
-            }])
-          } finally {
-            setLoading(false)
-          }
+    // Wait for required data to be available
+    if (!projectId || !token) {
+      console.log('🎬 Segment: Waiting for projectId and token...', { projectId: !!projectId, token: !!token })
+      return
+    }
+
+    console.log('🎬 Segment: Creating SINGLE segment...', { projectId, hasTemplate: !!initialTemplateData })
+    
+    const initializeSegments = async () => {
+      try {
+        setLoading(true)
+        hasCreatedInitialSegmentRef.current = true // Set immediately to prevent race conditions
+        
+        // Create ONE segment - either template or blank
+        const newSegment = await SegmentService.createSegment(token, {
+          type: 'web',
+          description: 'web',
+          projectId: projectId
+        })
+
+        if (initialTemplateData) {
+          setSegments([{
+            id: newSegment.id,
+            type: 'template',
+            videoUrl: initialTemplateData.videoUrl,
+            description: initialTemplateData.description,
+            templateId: initialTemplateData.templateId
+          }])
+          console.log('🎬 Segment: Template segment created successfully', newSegment.id)
         } else {
-          // No projectId or token, just set template segment
+          setSegments([{
+            id: newSegment.id,
+            type: 'blank'
+          }])
+          console.log('🎬 Segment: Blank segment created successfully', newSegment.id)
+        }
+        
+      } catch (error) {
+        console.error('Failed to create initial segment:', error)
+        // Fallback to local segments without backend
+        if (initialTemplateData) {
           setSegments([{
             id: '1',
             type: 'template',
@@ -68,15 +82,16 @@ const Segement = ({ projectId, initialTemplateData }: SegementProps) => {
             description: initialTemplateData.description,
             templateId: initialTemplateData.templateId
           }])
+        } else {
+          setSegments([{ id: '1', type: 'blank' }])
         }
-      } else {
-        // Default blank segment (from header or no template data)
-        setSegments([{ id: '1', type: 'blank' }])
+      } finally {
+        setLoading(false)
       }
     }
 
     initializeSegments()
-  }, [projectId, token, initialTemplateData])
+  }, [projectId, token, initialTemplateData]) // Removed hasCreatedInitialSegment from dependencies!
 
 
   const addVideoCard = async () => {
