@@ -25,45 +25,42 @@ const Segement = ({ projectId, initialTemplateData }: SegementProps) => {
   const [loading, setLoading] = useState(false)
   const maxCards = 5
 
-  // Initialize segments based on props
+  // Initialize segments and create backend segment if needed
   useEffect(() => {
-    if (initialTemplateData) {
-      // If we have template data, create a template segment
-      setSegments([{
-        id: '1',
-        type: 'template',
-        videoUrl: initialTemplateData.videoUrl,
-        description: initialTemplateData.description,
-        templateId: initialTemplateData.templateId
-      }])
-    } else {
-      // Default blank segment (from header or no template data)
-      setSegments([{ id: '1', type: 'blank' }])
-    }
-  }, [initialTemplateData])
+    const initializeSegments = async () => {
+      if (initialTemplateData) {
+        // If we have template data, try to create backend segment first
+        if (projectId && token) {
+          try {
+            setLoading(true)
+            const newSegment = await SegmentService.createSegment(token, {
+              type: 'web',
+              description: 'web',
+              projectId: projectId
+            })
 
-  // Create initial segment when projectId and template data are available
-  useEffect(() => {
-    const createInitialSegment = async () => {
-      if (projectId && token && initialTemplateData && segments.length === 0) {
-        try {
-          setLoading(true)
-          const newSegment = await SegmentService.createSegment(token, {
-            type: 'web',
-            description: 'web',
-            projectId: projectId
-          })
-
-          setSegments([{
-            id: newSegment.id,
-            type: 'template',
-            videoUrl: initialTemplateData.videoUrl,
-            description: initialTemplateData.description,
-            templateId: initialTemplateData.templateId
-          }])
-        } catch (error) {
-          console.error('Failed to create initial segment:', error)
-          // Fallback to template segment without backend
+            setSegments([{
+              id: newSegment.id,
+              type: 'template',
+              videoUrl: initialTemplateData.videoUrl,
+              description: initialTemplateData.description,
+              templateId: initialTemplateData.templateId
+            }])
+          } catch (error) {
+            console.error('Failed to create initial segment:', error)
+            // Fallback to template segment without backend
+            setSegments([{
+              id: '1',
+              type: 'template',
+              videoUrl: initialTemplateData.videoUrl,
+              description: initialTemplateData.description,
+              templateId: initialTemplateData.templateId
+            }])
+          } finally {
+            setLoading(false)
+          }
+        } else {
+          // No projectId or token, just set template segment
           setSegments([{
             id: '1',
             type: 'template',
@@ -71,14 +68,15 @@ const Segement = ({ projectId, initialTemplateData }: SegementProps) => {
             description: initialTemplateData.description,
             templateId: initialTemplateData.templateId
           }])
-        } finally {
-          setLoading(false)
         }
+      } else {
+        // Default blank segment (from header or no template data)
+        setSegments([{ id: '1', type: 'blank' }])
       }
     }
 
-    createInitialSegment()
-  }, [projectId, token, initialTemplateData, segments.length])
+    initializeSegments()
+  }, [projectId, token, initialTemplateData])
 
 
   const addVideoCard = async () => {

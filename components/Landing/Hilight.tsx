@@ -262,7 +262,7 @@ const Hilight = () => {
             </article>
           ))
         ) : (
-          displayCards.map((card, index) => (
+          displayCards.slice(0, 3).map((card, index) => (
             <article key={card.id || card.title} className="group overflow-hidden rounded-xl border border-white/10 bg-white/5 cursor-pointer" onClick={() => handleCardClick(card)}>
               <div 
                 className="relative aspect-[16/9] w-full cursor-pointer"

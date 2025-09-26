@@ -61,8 +61,8 @@ export const useTrending = (): UseTrendingReturn => {
       setError(null);
 
       const trendingData = await TemplateService.fetchTrendingTemplates(token, description);
-      // Take only the top 3 templates
-      setTrendingTemplates(trendingData.templates.slice(0, 3));
+      // Take all templates (up to 4)
+      setTrendingTemplates(trendingData.templates.slice(0, 4));
       setHasFetched(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch trending templates';
