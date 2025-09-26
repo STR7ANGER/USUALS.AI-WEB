@@ -56,7 +56,20 @@ const VideoPage = () => {
     console.log('🎬 Video Page: Segments state:', {
       segmentCount: segments.length,
       activeSegmentId: activeSegment?.id,
+      activeSegmentTemplate: activeSegment?.template,
       segmentError
+    })
+    
+    // Debug logging for preview data
+    console.log('🎬 Video Page: Preview data:', {
+      hasTemplate: !!activeSegment?.template,
+      templateVideo: activeSegment?.template ? { 
+        s3Key: activeSegment.template.s3Key, 
+        description: activeSegment.template.description 
+      } : null,
+      generatedVideosCount: activeSegment?.videos.length || 0,
+      currentVideoIndex: activeSegment?.currentVideoIndex || 0,
+      previewVideoUrl: activeSegment?.template?.s3Key
     })
   }, [projectId, videoUrl, templateDescription, templateId, segments, activeSegment, segmentError])
 
@@ -81,14 +94,31 @@ const VideoPage = () => {
         
         try {
           if (templateId && token) {
-            // If we have templateId, fetch the full template data
-            const { templates } = await TemplateService.fetchTemplates({ token })
-            const template = templates.find(t => t.id === templateId)
+            // Try to find template in paginated results
+            const response = await TemplateService.fetchTemplates({ token, page: 1, limit: 20 })
+            const template = response.data.find(t => t.id === templateId)
             
             if (template) {
               setSegmentTemplate(firstSegment.id, template)
-              console.log('✅ Applied template from templateId:', template)
+              console.log('✅ Applied template from paginated results:', template)
               return
+            } else {
+              console.warn('Template not found in first page, trying additional pages...')
+              // Try a few more pages to find the template
+              for (let page = 2; page <= 5; page++) {
+                try {
+                  const nextResponse = await TemplateService.fetchTemplates({ token, page, limit: 20 })
+                  const foundTemplate = nextResponse.data.find(t => t.id === templateId)
+                  if (foundTemplate) {
+                    setSegmentTemplate(firstSegment.id, foundTemplate)
+                    console.log(`✅ Applied template from page ${page}:`, foundTemplate)
+                    return
+                  }
+                } catch (error) {
+                  console.warn(`Failed to fetch page ${page}:`, error)
+                  break
+                }
+              }
             }
           }
           
@@ -195,6 +225,7 @@ const VideoPage = () => {
   // Adjust index to account for template video being first
   const adjustedIndex = templateVideo ? currentVideoIndex : Math.max(0, currentVideoIndex - 1)
   const previewVideoUrl = activeSegment?.template?.s3Key
+
 
   return (
     <div className="min-h-screen bg-[#111215] text-white">

@@ -19,14 +19,12 @@ export const useTemplates = (): UseTemplatesReturn => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState<boolean>(false);
-  const [page, setPage] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(false);
-  const [allTemplates, setAllTemplates] = useState<VideoTemplate[]>([]);
-  
-  // Removed previous duplicate-call guard to allow pagination fetches
+  const [totalPages, setTotalPages] = useState<number>(0);
 
-  const fetchTemplates = useCallback(async () => {
-    console.log('🔍 fetchTemplates called:', { hasToken: !!token, isAuthenticated, loading, hasFetched, page });
+  const fetchTemplates = useCallback(async (page: number = 1, append: boolean = false) => {
+    console.log('🔍 fetchTemplates called:', { hasToken: !!token, isAuthenticated, loading, page, append });
 
     if (!token || !isAuthenticated) {
       setError('Authentication required');
@@ -37,17 +35,30 @@ export const useTemplates = (): UseTemplatesReturn => {
     if (loading) return;
 
     try {
-      console.log('🚀 Making API call');
+      console.log('🚀 Making API call for page:', page);
       setLoading(true);
       setError(null);
 
-      const { templates: fullTemplates } = await TemplateService.fetchTemplates({ token });
-      setAllTemplates(fullTemplates);
-      // Initialize first 12
-      setTemplates(fullTemplates.slice(0, 12));
-      setHasMore(fullTemplates.length > 12);
-      setPage(1);
+      const response = await TemplateService.fetchTemplates({ token, page, limit: 20 });
+      
+      if (append) {
+        setTemplates(prev => [...prev, ...response.data]);
+      } else {
+        setTemplates(response.data);
+      }
+      
+      setCurrentPage(response.page);
+      setTotalPages(response.totalPages);
+      setHasMore(response.page < response.totalPages);
       setHasFetched(true);
+      
+      console.log('📊 Templates updated:', { 
+        currentCount: append ? templates.length + response.data.length : response.data.length,
+        total: response.total,
+        page: response.page,
+        totalPages: response.totalPages,
+        hasMore: response.page < response.totalPages
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch templates';
       setError(errorMessage);
@@ -55,40 +66,37 @@ export const useTemplates = (): UseTemplatesReturn => {
     } finally {
       setLoading(false);
     }
-  }, [token, isAuthenticated, loading, hasFetched, page]);
+  }, [token, isAuthenticated, loading, templates.length]);
 
   const refresh = useCallback(async () => {
     setTemplates([]);
     setHasFetched(false);
     setError(null);
-    setPage(1);
+    setCurrentPage(1);
     setHasMore(true);
+    setTotalPages(0);
     // Don't call fetchTemplates here - let useEffect handle it
   }, []);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || loading) return;
-    const nextPage = page + 1;
-    const nextCount = nextPage * 12;
-    const nextSlice = allTemplates.slice(0, nextCount);
-    setTemplates(nextSlice);
-    setPage(nextPage);
-    setHasMore(allTemplates.length > nextSlice.length);
-  }, [hasMore, loading, page, allTemplates]);
+    const nextPage = currentPage + 1;
+    await fetchTemplates(nextPage, true);
+  }, [hasMore, loading, currentPage, fetchTemplates]);
 
   // Initial load when authenticated
   useEffect(() => {
     if (isAuthenticated && token) {
       // Only fetch once on mount/auth change
-      if (!hasFetched && !loading) fetchTemplates();
+      if (!hasFetched && !loading) fetchTemplates(1, false);
     } else {
       // Reset state when not authenticated
       setTemplates([]);
       setError(null);
       setHasFetched(false);
-      setPage(1);
+      setCurrentPage(1);
       setHasMore(false);
-      setAllTemplates([]);
+      setTotalPages(0);
     }
   }, [isAuthenticated, token, fetchTemplates, hasFetched, loading]);
 
