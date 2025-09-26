@@ -23,7 +23,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://backend.usuals.ai";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 function isRunningInBrowser() {
   return typeof window !== "undefined";

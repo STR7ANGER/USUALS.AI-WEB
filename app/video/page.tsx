@@ -25,15 +25,17 @@ const VideoPage = () => {
   const videoUrl = searchParams.get('videoUrl')
   const templateDescription = searchParams.get('templateDescription')
   const templateId = searchParams.get('templateId')
+  const projectId = searchParams.get('projectId')
   
   // Debug logging
   React.useEffect(() => {
     console.log('🎬 Video Page: Received search params:', {
       videoUrl,
       templateDescription,
-      templateId
+      templateId,
+      projectId
     })
-  }, [videoUrl, templateDescription, templateId])
+  }, [videoUrl, templateDescription, templateId, projectId])
 
   // Ensure component is mounted on client side
   React.useEffect(() => {
@@ -107,7 +109,14 @@ const VideoPage = () => {
               templateJsonPrompt={templateData.jsonPrompt}
             />
           </div>
-          <Segement />
+          <Segement 
+            projectId={projectId || undefined}
+            initialTemplateData={videoUrl ? {
+              videoUrl: videoUrl,
+              description: templateDescription || undefined,
+              templateId: templateId || undefined
+            } : undefined}
+          />
           <Chat />
         </div>
       </div>

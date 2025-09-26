@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import AuthButton from "../AuthButton";
 import { useAuth } from "@/hooks/useAuth";
 import { ProjectService } from "@/services/project";
+import { SegmentService } from "@/services/segment";
 
 const Header = () => {
   const currentPath = usePathname();
@@ -25,6 +26,14 @@ const Header = () => {
       }
       const project = await ProjectService.createProject(token, { name, description });
       const projectId = project.id;
+      
+      // Create initial blank segment
+      await SegmentService.createSegment(token, {
+        type: 'web',
+        description: 'web',
+        projectId: projectId
+      });
+      
       router.push(`/video?projectId=${encodeURIComponent(projectId)}&name=${encodeURIComponent(name)}`);
     } catch (error) {
       console.error("Failed to create project from header Video click", error);
