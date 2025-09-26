@@ -8,11 +8,17 @@ import Setting from './sidebar/Setting'
 type SidebarProps = {
   isOpen: boolean
   setOpen: (open: boolean) => void
+  onTemplateSelect?: (template: {
+    id: string;
+    description: string;
+    jsonPrompt: string;
+    s3Key: string;
+  }) => void
 }
 
 type ActiveTab = 'export' | 'template' | 'prompt' | 'audio' | 'setting'
 
-const Sidebar = ({ isOpen, setOpen }: SidebarProps) => {
+const Sidebar = ({ isOpen, setOpen, onTemplateSelect }: SidebarProps) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('template')
   return (
     <>
@@ -116,7 +122,7 @@ const Sidebar = ({ isOpen, setOpen }: SidebarProps) => {
               
               <div className="space-y-4">
                 {activeTab === 'export' && <Export />}
-                {activeTab === 'template' && <Template />}
+                {activeTab === 'template' && <Template onTemplateSelect={onTemplateSelect} />}
                 {activeTab === 'audio' && <Audio />}
                 {activeTab === 'setting' && <Setting />}
               </div>

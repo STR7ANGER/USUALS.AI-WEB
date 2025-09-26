@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useRef, useEffect } from 'react'
 import { useTrending } from '../../../hooks/useTrending'
+import { getVideoUrl } from '../../../lib/video-utils'
 
 interface DisplayCard {
   id?: string
@@ -10,7 +11,16 @@ interface DisplayCard {
   videoUrl?: string
 }
 
-const Template = () => {
+interface TemplateProps {
+  onTemplateSelect?: (template: {
+    id: string;
+    description: string;
+    jsonPrompt: string;
+    s3Key: string;
+  }) => void;
+}
+
+const Template = ({ onTemplateSelect }: TemplateProps) => {
   const { trendingTemplates, loading: trendingLoading, fetchByDescription } = useTrending()
   const [activeTag, setActiveTag] = useState<string>("")
   const [searchValue, setSearchValue] = useState<string>("")
@@ -58,6 +68,21 @@ const Template = () => {
     }
   }
 
+  const handleTemplateClick = (card: DisplayCard) => {
+    if (onTemplateSelect && card.id) {
+      // Find the full template data from trending templates
+      const fullTemplate = trendingTemplates.find(t => t.id === card.id)
+      if (fullTemplate) {
+        onTemplateSelect({
+          id: fullTemplate.id,
+          description: fullTemplate.description,
+          jsonPrompt: fullTemplate.jsonPrompt,
+          s3Key: fullTemplate.s3Key
+        })
+      }
+    }
+  }
+
 
   // Initial load
   useEffect(() => {
@@ -98,7 +123,7 @@ const Template = () => {
         id: template.id,
         title: template.description.toUpperCase(),
         subtitle: template.description,
-        videoUrl: template.s3Key
+        videoUrl: getVideoUrl(template.s3Key)
       }))
     : defaultCards
 
@@ -177,9 +202,9 @@ const Template = () => {
           ))
         ) : (
           displayCards.map((card, index) => (
-            <div key={card.id || card.title} className="cursor-pointer">
+            <div key={card.id || card.title} className="cursor-pointer" onClick={() => handleTemplateClick(card)}>
               <div 
-                className="relative w-full h-24 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg overflow-hidden"
+                className="relative w-full h-24 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg overflow-hidden hover:ring-2 hover:ring-cyan-400 transition-all"
                 onMouseEnter={() => card.videoUrl && handleVideoHover(card.id || card.title, true)}
                 onMouseLeave={() => card.videoUrl && handleVideoHover(card.id || card.title, false)}
               >

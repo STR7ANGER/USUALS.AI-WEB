@@ -3,7 +3,9 @@
 import React from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { TemplateService } from '@/services/template'
+import { useSegments } from '@/hooks/useSegments'
+import { VideoTemplate, TemplateService } from '@/services/template'
+import { VideoGenerationService } from '@/services/video-generation'
 import Header from '@/components/Video/Header'
 import Sidebar from '@/components/Video/Sidebar'
 import Preview from '@/components/Video/Preview'
@@ -13,65 +15,130 @@ import Segement from '@/components/Video/Segement'
 const VideoPage = () => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
-  const [templateData, setTemplateData] = React.useState<{
-    description?: string;
-    jsonPrompt?: string;
-  }>({})
   const { isAuthenticated, loading, token } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   
-  // Get template data from search parameters
+  // Get project data from search parameters
+  const projectId = searchParams.get('projectId')
   const videoUrl = searchParams.get('videoUrl')
   const templateDescription = searchParams.get('templateDescription')
   const templateId = searchParams.get('templateId')
-  const projectId = searchParams.get('projectId')
+  
+  // Initialize segments hook with initial template data
+  const {
+    segments,
+    activeSegment,
+    loading: segmentLoading,
+    error: segmentError,
+    createSegment,
+    selectSegment,
+    setSegmentTemplate,
+    generateVideo,
+    navigateVideo,
+    canCreateSegment,
+    isChatEnabled
+  } = useSegments(projectId || undefined, {
+    templateId: templateId || undefined,
+    videoUrl: videoUrl || undefined,
+    description: templateDescription || undefined
+  })
   
   // Debug logging
   React.useEffect(() => {
     console.log('🎬 Video Page: Received search params:', {
+      projectId,
       videoUrl,
       templateDescription,
-      templateId,
-      projectId
+      templateId
     })
-  }, [videoUrl, templateDescription, templateId, projectId])
+    console.log('🎬 Video Page: Segments state:', {
+      segmentCount: segments.length,
+      activeSegmentId: activeSegment?.id,
+      segmentError
+    })
+  }, [projectId, videoUrl, templateDescription, templateId, segments, activeSegment, segmentError])
 
   // Ensure component is mounted on client side
   React.useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Fetch template data when templateId is available
+  // Handle initial template data from URL parameters - only once when first segment is ready
   React.useEffect(() => {
-    const fetchTemplateData = async () => {
-      if (templateId && token && isAuthenticated) {
+    const applyInitialTemplate = async () => {
+      // Only apply if we have template data from URL and the first segment exists without a template
+      if (mounted && isAuthenticated && segments.length > 0 && !segments[0].template && (templateId || (videoUrl && templateDescription))) {
+        const firstSegment = segments[0]
+        
+        console.log('🎬 Video Page: Applying initial template to first segment:', {
+          templateId,
+          videoUrl,
+          templateDescription,
+          firstSegmentId: firstSegment.id
+        })
+        
         try {
-          // Fetch all templates and find the one with matching ID
-          const { templates } = await TemplateService.fetchTemplates({ token })
-          const template = templates.find(t => t.id === templateId)
+          if (templateId && token) {
+            // If we have templateId, fetch the full template data
+            const { templates } = await TemplateService.fetchTemplates({ token })
+            const template = templates.find(t => t.id === templateId)
+            
+            if (template) {
+              setSegmentTemplate(firstSegment.id, template)
+              console.log('✅ Applied template from templateId:', template)
+              return
+            }
+          }
           
-          if (template) {
-            setTemplateData({
-              description: template.description,
-              jsonPrompt: template.jsonPrompt
-            })
+          // Fallback: create template object from URL parameters
+          if (videoUrl && templateDescription) {
+            const templateFromUrl: VideoTemplate = {
+              id: templateId || 'url-template',
+              description: templateDescription,
+              jsonPrompt: '{}', // Default empty JSON prompt
+              s3Key: videoUrl,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+            
+            setSegmentTemplate(firstSegment.id, templateFromUrl)
+            console.log('✅ Applied template from URL parameters:', templateFromUrl)
           }
         } catch (error) {
-          console.error('Failed to fetch template data:', error)
+          console.error('❌ Failed to apply initial template:', error)
         }
-      } else if (templateDescription) {
-        // If no templateId but we have description, use that
-        setTemplateData({
-          description: templateDescription
-        })
       }
     }
 
-    if (mounted && isAuthenticated) {
-      fetchTemplateData()
+    // Only run once when conditions are met
+    if (segments.length > 0 && !segments[0].template) {
+      applyInitialTemplate()
     }
-  }, [mounted, isAuthenticated, templateId, templateDescription, token])
+  }, [mounted, isAuthenticated, token, segments.length, templateId, videoUrl, templateDescription, setSegmentTemplate])
+
+  // Handle template selection from sidebar
+  const handleTemplateSelect = React.useCallback((template: VideoTemplate) => {
+    if (activeSegment) {
+      console.log('🎬 Video Page: Template selected for segment:', activeSegment.id, template)
+      setSegmentTemplate(activeSegment.id, template)
+    }
+  }, [activeSegment, setSegmentTemplate])
+
+  // Handle chat message submission
+  const handleChatMessage = React.useCallback(async (message: string) => {
+    if (activeSegment && isChatEnabled(activeSegment.id)) {
+      console.log('🎬 Video Page: Generating video for segment:', activeSegment.id, message)
+      await generateVideo(activeSegment.id, message)
+    }
+  }, [activeSegment, isChatEnabled, generateVideo])
+
+  // Handle video navigation
+  const handleVideoNavigation = React.useCallback((direction: 'next' | 'prev') => {
+    if (activeSegment) {
+      navigateVideo(activeSegment.id, direction)
+    }
+  }, [activeSegment, navigateVideo])
 
   // Redirect to home if not authenticated
   React.useEffect(() => {
@@ -97,6 +164,23 @@ const VideoPage = () => {
     return null
   }
 
+  // Prepare segment data for the Segment component
+  const segmentData = segments.map(segment => ({
+    id: segment.id,
+    name: segment.name,
+    isActive: segment.isActive,
+    hasTemplate: !!segment.template,
+    videoCount: segment.videos.length
+  }))
+
+  // Prepare preview data
+  const currentVideo = activeSegment?.videos[activeSegment.currentVideoIndex]
+  const previewVideoUrl = activeSegment?.template?.s3Key
+  const generatedVideos = activeSegment?.videos.map(video => ({
+    s3Key: video.s3Key,
+    description: video.description
+  })) || []
+
   return (
     <div className="min-h-screen bg-[#111215] text-white">
       <Header />
@@ -104,25 +188,43 @@ const VideoPage = () => {
         <div className="flex-1 flex flex-col">
           <div className="flex-1 min-h-0">
             <Preview 
-              videoUrl={videoUrl || undefined} 
-              templateDescription={templateData.description}
-              templateJsonPrompt={templateData.jsonPrompt}
+              videoUrl={previewVideoUrl}
+              templateDescription={activeSegment?.template?.description}
+              templateJsonPrompt={activeSegment?.template?.jsonPrompt}
+              generatedVideos={generatedVideos}
+              currentVideoIndex={activeSegment?.currentVideoIndex || 0}
+              onNavigateVideo={handleVideoNavigation}
             />
           </div>
           <Segement 
-            projectId={projectId || undefined}
-            initialTemplateData={videoUrl ? {
-              videoUrl: videoUrl,
-              description: templateDescription || undefined,
-              templateId: templateId || undefined
-            } : undefined}
+            segments={segmentData}
+            onSelectSegment={selectSegment}
+            onCreateSegment={createSegment}
+            canCreateSegment={canCreateSegment}
+            loading={segmentLoading}
           />
-          <Chat />
+          <Chat 
+            isEnabled={activeSegment ? isChatEnabled(activeSegment.id) : false}
+            onSendMessage={handleChatMessage}
+            loading={segmentLoading}
+          />
         </div>
       </div>
-      <Sidebar isOpen={sidebarOpen} setOpen={setSidebarOpen} />
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        setOpen={setSidebarOpen}
+        onTemplateSelect={handleTemplateSelect}
+      />
+      
+      {/* Error Display */}
+      {segmentError && (
+        <div className="fixed bottom-4 right-4 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg">
+          <p className="text-sm">{segmentError}</p>
+        </div>
+      )}
     </div>
   )
 }
 
 export default VideoPage
+
