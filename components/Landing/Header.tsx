@@ -4,9 +4,16 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AuthButton from "../AuthButton";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
   const currentPath = usePathname();
+  const [mounted, setMounted] = React.useState(false);
+  const { isAuthenticated } = useAuth();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="sticky top-0 z-30 w-full bg-black/75 backdrop-blur">
@@ -54,16 +61,18 @@ const Header = () => {
             >
               Explore
             </Link>
-            <Link
-              className={`rounded-md px-3 py-1.5 ${
-                currentPath === '/video' 
-                  ? 'text-[#F9D312]' 
-                  : 'text-white/80 hover:bg-white/10 hover:text-white'
-              }`}
-              href="/video"
-            >
-              Video
-            </Link>
+            {mounted && isAuthenticated && (
+              <Link
+                className={`rounded-md px-3 py-1.5 ${
+                  currentPath === '/video' 
+                    ? 'text-[#F9D312]' 
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                href="/video"
+              >
+                Video
+              </Link>
+            )}
             <a
               className="rounded-md px-3 py-1.5 text-white/80 hover:bg-white/10 hover:text-white"
               href="https://x.com/usualsai"
