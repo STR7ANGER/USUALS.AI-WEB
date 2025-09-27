@@ -50,17 +50,13 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
   useEffect(() => {
     // Prevent multiple initializations using ref (doesn't trigger re-renders)
     if (hasCreatedInitialSegmentRef.current) {
-      console.log('🎬 useSegments: Already created initial segment, skipping');
       return;
     }
 
     // Wait for required data to be available
     if (!projectId || !token) {
-      console.log('🎬 useSegments: Waiting for projectId and token...', { projectId: !!projectId, token: !!token });
       return;
     }
-
-    console.log('🎬 useSegments: Creating SINGLE segment...', { projectId, hasTemplate: !!initialTemplateData });
     
     const initializeSegments = async () => {
       try {
@@ -85,7 +81,6 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
         };
 
         setSegments([firstSegment]);
-        console.log('✅ useSegments: Created first segment successfully', newSegment.id);
         
       } catch (error) {
         console.error('❌ useSegments: Failed to create initial segment:', error);
@@ -105,7 +100,6 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
 
     try {
       setLoading(true);
-      console.log('🎬 useSegments: Creating new segment for project:', projectId);
       
       // Create segment in backend
       const newBackendSegment = await SegmentService.createSegment(token, {
@@ -129,7 +123,6 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
         { ...newSegment, isActive: true } // Make new segment active
       ]);
       
-      console.log('✅ useSegments: Created new segment:', newSegment);
     } catch (err) {
       console.error('❌ useSegments: Failed to create segment:', err);
       setError(err instanceof Error ? err.message : 'Failed to create segment');
@@ -211,7 +204,6 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
         return s;
       }));
 
-      console.log('✅ Video generated successfully:', newVideo);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate video';
       setError(errorMessage);

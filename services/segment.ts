@@ -13,6 +13,33 @@ export interface Segment {
   updatedAt: string;
 }
 
+export interface SegmentVideo {
+  id: string;
+  description: string;
+  jsonPrompt: {
+    prompt: string;
+    style?: string;
+    [key: string]: any;
+  };
+  segmentId: string;
+  s3Key: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectSegmentsResponse {
+  projectId: string;
+  segments: Segment[];
+  count: number;
+}
+
+export interface SegmentVideosResponse {
+  segmentId: string;
+  projectId: string;
+  videos: SegmentVideo[];
+  count: number;
+}
+
 export class SegmentService {
   private static baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
@@ -46,5 +73,48 @@ export class SegmentService {
     }
 
     return response.json();
+  }
+
+  // New method to fetch segments for existing project
+  static async getProjectSegments(token: string, projectId: string): Promise<ProjectSegmentsResponse> {
+    const response = await fetch(`${this.baseUrl}/projects/${projectId}/segments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch project segments: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  // New method to fetch videos for a specific segment
+  static async getSegmentVideos(token: string, segmentId: string): Promise<SegmentVideosResponse> {
+    const response = await fetch(`${this.baseUrl}/projects/segment/${segmentId}/videos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch segment videos: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  // Helper method to fetch all videos for multiple segments in parallel
+  static async getAllSegmentVideos(token: string, segmentIds: string[]): Promise<SegmentVideosResponse[]> {
+    const promises = segmentIds.map(segmentId => 
+      this.getSegmentVideos(token, segmentId)
+    );
+    
+    return Promise.all(promises);
   }
 }

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Project } from '@/services/project'
 
 interface ProjectCardProps {
@@ -6,6 +7,7 @@ interface ProjectCardProps {
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+  const router = useRouter()
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -15,8 +17,21 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     });
   };
 
+  const handleProjectClick = () => {
+    // Navigate to video page with project ID and name
+    const params = new URLSearchParams({
+      projectId: project.id,
+      projectName: project.name || `Project ${formatDate(project.createdAt)}`,
+      isExisting: 'true'
+    });
+    router.push(`/video?${params.toString()}`);
+  };
+
   return (
-    <div className="bg-[#111215] border border-gray-800 rounded-xl overflow-hidden hover:border-[#F9D312]/30 transition-all duration-300 hover:shadow-lg hover:shadow-[#F9D312]/5 group cursor-pointer">
+    <div 
+      onClick={handleProjectClick}
+      className="bg-[#111215] border border-gray-800 rounded-xl overflow-hidden hover:border-[#F9D312]/30 transition-all duration-300 hover:shadow-lg hover:shadow-[#F9D312]/5 group cursor-pointer"
+    >
       {/* Media Section */}
       <div className="aspect-video bg-[#000000] flex items-center justify-center relative">
         {project.thumbnailUrl ? (

@@ -2,9 +2,13 @@ import React from "react";
 import { useSearchParams } from 'next/navigation'
 import AuthButton from "../AuthButton";
 
-const Header = () => {
+interface HeaderProps {
+  projectName?: string;
+}
+
+const Header: React.FC<HeaderProps> = ({ projectName: propProjectName }) => {
   const searchParams = useSearchParams()
-  const projectName = searchParams?.get('name') || 'Untitled'
+  const projectName = propProjectName || searchParams?.get('name') || 'Untitled'
   return (
     <div className="bg-[#111215]  px-6 py-3">
       <div className="flex items-center justify-between">

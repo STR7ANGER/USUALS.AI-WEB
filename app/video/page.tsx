@@ -4,6 +4,7 @@ import React from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useSegments } from '@/hooks/useSegments'
+import { useExistingProject } from '@/hooks/useExistingProject'
 import { VideoTemplate, TemplateService } from '@/services/template'
 import { VideoGenerationService } from '@/services/video-generation'
 import { getVideoUrl } from '@/lib/video-utils'
@@ -22,67 +23,141 @@ const VideoPage = () => {
   
   // Get project data from search parameters
   const projectId = searchParams.get('projectId')
+  const projectName = searchParams.get('projectName')
+  const isExisting = searchParams.get('isExisting') === 'true'
   const videoUrl = searchParams.get('videoUrl')
   const templateDescription = searchParams.get('templateDescription')
   const templateId = searchParams.get('templateId')
   
-  // Initialize segments hook with initial template data
+  // Use different hooks based on whether this is an existing project or new project
+  const existingProjectData = useExistingProject(
+    isExisting ? projectId : null,
+    isExisting ? projectName : null
+  );
+
+  // Initialize segments hook with initial template data (for new projects)
+  const newProjectData = useSegments(
+    !isExisting ? (projectId || undefined) : undefined, 
+    {
+      templateId: templateId || undefined,
+      videoUrl: videoUrl || undefined,
+      description: templateDescription || undefined
+    }
+  );
+
+  // Choose which data to use based on project type
   const {
     segments,
-    activeSegment,
     loading: segmentLoading,
     error: segmentError,
-    createSegment,
-    selectSegment,
-    setSegmentTemplate,
-    generateVideo,
-    navigateVideo,
-    canCreateSegment,
-    isChatEnabled
-  } = useSegments(projectId || undefined, {
-    templateId: templateId || undefined,
-    videoUrl: videoUrl || undefined,
-    description: templateDescription || undefined
-  })
+    canCreateSegment = false,
+  } = isExisting ? {
+    segments: existingProjectData.segments.map((seg, index) => ({
+      id: seg.id,
+      name: `Segment ${index + 1}`, // Fix: Use proper segment names
+      isActive: false, // We'll handle active state differently for existing projects
+      template: null, // Existing projects don't use templates in the same way
+      videos: seg.videos.map(video => ({
+        id: video.id,
+        s3Key: video.s3Key,
+        description: video.description,
+        createdAt: video.createdAt,
+        updatedAt: video.updatedAt
+      })),
+      currentVideoIndex: 0
+    })),
+    loading: existingProjectData.loading,
+    error: existingProjectData.error,
+    canCreateSegment: false, // Never show + segment button for existing projects
+  } : {
+    segments: newProjectData.segments,
+    loading: newProjectData.loading,
+    error: newProjectData.error,
+    canCreateSegment: newProjectData.canCreateSegment,
+  };
+
+  // For existing projects, we'll use the first segment as active, or create a simple active state
+  const [activeSegmentIndex, setActiveSegmentIndex] = React.useState(0);
+  const [currentVideoIndex, setCurrentVideoIndex] = React.useState(0);
+
+  // Prepare preview data based on project type - moved to top to maintain hook order
+  const previewData = React.useMemo(() => {
+    let templateVideo = null;
+    let generatedVideos = [];
+    let videoIndex = 0;
+    let previewVideoUrl = null;
+
+    const activeSegment = isExisting 
+      ? (segments.length > 0 ? segments[activeSegmentIndex] : null)
+      : newProjectData.activeSegment;
+
+    if (isExisting && activeSegment) {
+      // For existing projects, show the videos directly
+      generatedVideos = activeSegment.videos.map(video => ({
+        s3Key: video.s3Key,
+        description: video.description,
+        isTemplate: false
+      }));
+      videoIndex = currentVideoIndex;
+      previewVideoUrl = activeSegment.videos.length > 0 ? activeSegment.videos[videoIndex]?.s3Key : null;
+    } else if (!isExisting && activeSegment) {
+      // For new projects, include template video as first item if it exists
+      templateVideo = activeSegment.template ? {
+        s3Key: activeSegment.template.s3Key,
+        description: `Template: ${activeSegment.template.description}`,
+        isTemplate: true
+      } : null;
+
+      generatedVideos = activeSegment.videos.map(video => ({
+        s3Key: video.s3Key,
+        description: video.description,
+        isTemplate: false
+      }));
+      
+      videoIndex = activeSegment.currentVideoIndex || 0;
+      previewVideoUrl = activeSegment.template?.s3Key;
+    }
+
+    // Combine template video with generated videos (for new projects)
+    const allVideos = templateVideo ? [templateVideo, ...generatedVideos] : generatedVideos;
+    
+    return {
+      templateVideo,
+      generatedVideos,
+      currentVideoIndex: videoIndex,
+      previewVideoUrl,
+      allVideos
+    };
+  }, [isExisting, segments, activeSegmentIndex, currentVideoIndex, newProjectData.activeSegment]);
+
+  const { templateVideo, generatedVideos, currentVideoIndex: previewVideoIndex, previewVideoUrl, allVideos } = previewData;
   
-  // Debug logging
+  
+  // activeSegment is now calculated inside useMemo above
+  
+  // Debug logging - only log when key parameters change, not on every render
   React.useEffect(() => {
     console.log('🎬 Video Page: Received search params:', {
       projectId,
+      projectName,
+      isExisting,
       videoUrl,
       templateDescription,
       templateId
     })
-    console.log('🎬 Video Page: Segments state:', {
-      segmentCount: segments.length,
-      activeSegmentId: activeSegment?.id,
-      activeSegmentTemplate: activeSegment?.template,
-      segmentError
-    })
-    
-    // Debug logging for preview data
-    console.log('🎬 Video Page: Preview data:', {
-      hasTemplate: !!activeSegment?.template,
-      templateVideo: activeSegment?.template ? { 
-        s3Key: activeSegment.template.s3Key, 
-        description: activeSegment.template.description 
-      } : null,
-      generatedVideosCount: activeSegment?.videos.length || 0,
-      currentVideoIndex: activeSegment?.currentVideoIndex || 0,
-      previewVideoUrl: activeSegment?.template?.s3Key
-    })
-  }, [projectId, videoUrl, templateDescription, templateId, segments, activeSegment, segmentError])
+  }, [projectId, projectName, isExisting, videoUrl, templateDescription, templateId])
+
 
   // Ensure component is mounted on client side
   React.useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Handle initial template data from URL parameters - only once when first segment is ready
+  // Handle initial template data from URL parameters - only for new projects
   React.useEffect(() => {
     const applyInitialTemplate = async () => {
-      // Only apply if we have template data from URL and the first segment exists without a template
-      if (mounted && isAuthenticated && segments.length > 0 && !segments[0].template && (templateId || (videoUrl && templateDescription))) {
+      // Only apply if this is a new project and we have template data from URL and the first segment exists without a template
+      if (!isExisting && mounted && isAuthenticated && segments.length > 0 && !segments[0].template && (templateId || (videoUrl && templateDescription))) {
         const firstSegment = segments[0]
         
         console.log('🎬 Video Page: Applying initial template to first segment:', {
@@ -99,7 +174,7 @@ const VideoPage = () => {
             const template = response.data.find(t => t.id === templateId)
             
             if (template) {
-              setSegmentTemplate(firstSegment.id, template)
+              newProjectData.setSegmentTemplate(firstSegment.id, template)
               console.log('✅ Applied template from paginated results:', template)
               return
             } else {
@@ -110,7 +185,7 @@ const VideoPage = () => {
                   const nextResponse = await TemplateService.fetchTemplates({ token, page, limit: 20 })
                   const foundTemplate = nextResponse.data.find(t => t.id === templateId)
                   if (foundTemplate) {
-                    setSegmentTemplate(firstSegment.id, foundTemplate)
+                    newProjectData.setSegmentTemplate(firstSegment.id, foundTemplate)
                     console.log(`✅ Applied template from page ${page}:`, foundTemplate)
                     return
                   }
@@ -133,7 +208,7 @@ const VideoPage = () => {
               updatedAt: new Date().toISOString()
             }
             
-            setSegmentTemplate(firstSegment.id, templateFromUrl)
+            newProjectData.setSegmentTemplate(firstSegment.id, templateFromUrl)
             console.log('✅ Applied template from URL parameters:', templateFromUrl)
           }
         } catch (error) {
@@ -142,34 +217,104 @@ const VideoPage = () => {
       }
     }
 
-    // Only run once when conditions are met
-    if (segments.length > 0 && !segments[0].template) {
+    // Only run once when conditions are met for new projects
+    if (!isExisting && segments.length > 0 && !segments[0].template) {
       applyInitialTemplate()
     }
-  }, [mounted, isAuthenticated, token, segments.length, templateId, videoUrl, templateDescription, setSegmentTemplate])
+  }, [isExisting, mounted, isAuthenticated, token, segments.length, templateId, videoUrl, templateDescription, newProjectData])
 
-  // Handle template selection from sidebar
+  // Handle template selection from sidebar (only for new projects)
   const handleTemplateSelect = React.useCallback((template: VideoTemplate) => {
-    if (activeSegment) {
-      console.log('🎬 Video Page: Template selected for segment:', activeSegment.id, template)
-      setSegmentTemplate(activeSegment.id, template)
+    const currentActiveSegment = isExisting 
+      ? (segments.length > 0 ? segments[activeSegmentIndex] : null)
+      : newProjectData.activeSegment;
+      
+    console.log('🎬 Video Page: Template selection attempt:', {
+      isExisting,
+      hasActiveSegment: !!currentActiveSegment,
+      activeSegmentId: currentActiveSegment?.id,
+      templateId: template.id
+    });
+    
+    if (!isExisting && currentActiveSegment) {
+      console.log('🎬 Video Page: Applying template to segment:', currentActiveSegment.id, template.description);
+      newProjectData.setSegmentTemplate(currentActiveSegment.id, template);
+    } else {
+      console.log('🎬 Video Page: Template selection blocked - isExisting:', isExisting, 'hasActiveSegment:', !!currentActiveSegment);
     }
-  }, [activeSegment, setSegmentTemplate])
+  }, [isExisting, segments, activeSegmentIndex, newProjectData])
 
-  // Handle chat message submission
+  // Handle chat message submission (only for new projects)
   const handleChatMessage = React.useCallback(async (message: string) => {
-    if (activeSegment && isChatEnabled(activeSegment.id)) {
-      console.log('🎬 Video Page: Generating video for segment:', activeSegment.id, message)
-      await generateVideo(activeSegment.id, message)
+    const currentActiveSegment = isExisting 
+      ? (segments.length > 0 ? segments[activeSegmentIndex] : null)
+      : newProjectData.activeSegment;
+      
+    if (!isExisting && currentActiveSegment && newProjectData.isChatEnabled(currentActiveSegment.id)) {
+      console.log('🎬 Video Page: Generating video for segment:', currentActiveSegment.id, message)
+      await newProjectData.generateVideo(currentActiveSegment.id, message)
     }
-  }, [activeSegment, isChatEnabled, generateVideo])
+  }, [isExisting, segments, activeSegmentIndex, newProjectData])
 
   // Handle video navigation
   const handleVideoNavigation = React.useCallback((direction: 'next' | 'prev') => {
-    if (activeSegment) {
-      navigateVideo(activeSegment.id, direction)
+    const currentActiveSegment = isExisting 
+      ? (segments.length > 0 ? segments[activeSegmentIndex] : null)
+      : newProjectData.activeSegment;
+      
+    if (currentActiveSegment) {
+      if (isExisting) {
+        // For existing projects, navigate through the videos in the current segment
+        const currentIndex = currentActiveSegment.currentVideoIndex || 0;
+        const maxIndex = currentActiveSegment.videos.length - 1;
+        
+        let newIndex = currentIndex;
+        if (direction === 'next' && currentIndex < maxIndex) {
+          newIndex = currentIndex + 1;
+        } else if (direction === 'prev' && currentIndex > 0) {
+          newIndex = currentIndex - 1;
+        }
+        
+        // Update the current video index for existing projects
+        setCurrentVideoIndex(newIndex);
+        
+        console.log('🎬 Video navigation for existing project:', { 
+          direction, 
+          currentIndex, 
+          newIndex, 
+          maxIndex,
+          videoCount: currentActiveSegment.videos.length,
+          segmentId: currentActiveSegment.id
+        });
+      } else {
+        newProjectData.navigateVideo(currentActiveSegment.id, direction)
+      }
     }
-  }, [activeSegment, navigateVideo])
+  }, [isExisting, segments, activeSegmentIndex, newProjectData])
+
+  // Handle segment selection
+  const handleSelectSegment = React.useCallback((segmentId: string) => {
+    console.log('🎬 Video Page: Selecting segment:', segmentId, 'isExisting:', isExisting);
+    if (isExisting) {
+      const segmentIndex = segments.findIndex(seg => seg.id === segmentId);
+      if (segmentIndex !== -1) {
+        setActiveSegmentIndex(segmentIndex);
+        setCurrentVideoIndex(0); // Reset to first video when switching segments
+        console.log('🎬 Video Page: Set active segment index to:', segmentIndex);
+      }
+    } else {
+      newProjectData.selectSegment(segmentId);
+      console.log('🎬 Video Page: Called newProjectData.selectSegment for:', segmentId);
+    }
+  }, [isExisting, segments, newProjectData])
+
+  // Handle segment creation (only for new projects or existing projects with less than 5 segments)
+  const handleCreateSegment = React.useCallback(() => {
+    if (!isExisting) {
+      newProjectData.createSegment();
+    }
+    // For existing projects, we don't create segments in this flow
+  }, [isExisting, newProjectData])
 
   // Redirect to home if not authenticated
   React.useEffect(() => {
@@ -196,61 +341,43 @@ const VideoPage = () => {
   }
 
   // Prepare segment data for the Segment component
-  const segmentData = segments.map(segment => ({
+  const segmentData = segments.map((segment, index) => ({
     id: segment.id,
     name: segment.name,
-    isActive: segment.isActive,
-    hasTemplate: !!segment.template,
+    isActive: isExisting ? (index === activeSegmentIndex) : segment.isActive,
+    hasTemplate: isExisting ? segment.videos.length > 0 : !!segment.template,
     videoCount: segment.videos.length,
-    templateVideoUrl: segment.template ? getVideoUrl(segment.template.s3Key) : undefined
+    templateVideoUrl: isExisting 
+      ? (segment.videos.length > 0 ? getVideoUrl(segment.videos[0].s3Key) : undefined)
+      : (segment.template ? getVideoUrl(segment.template.s3Key) : undefined)
   }))
 
-  // Prepare preview data - include template video as first item if it exists
-  const templateVideo = activeSegment?.template ? {
-    s3Key: activeSegment.template.s3Key,
-    description: `Template: ${activeSegment.template.description}`,
-    isTemplate: true
-  } : null
-
-  const generatedVideos = activeSegment?.videos.map(video => ({
-    s3Key: video.s3Key,
-    description: video.description,
-    isTemplate: false
-  })) || []
-
-  // Combine template video with generated videos
-  const allVideos = templateVideo ? [templateVideo, ...generatedVideos] : generatedVideos
-  const currentVideoIndex = activeSegment?.currentVideoIndex || 0
-  
-  // Adjust index to account for template video being first
-  const adjustedIndex = templateVideo ? currentVideoIndex : Math.max(0, currentVideoIndex - 1)
-  const previewVideoUrl = activeSegment?.template?.s3Key
 
 
   return (
     <div className="min-h-screen bg-[#111215] text-white">
-      <Header />
+      <Header projectName={isExisting ? (projectName || 'Untitled Project') : undefined} />
       <div className={`flex h-[calc(100vh-64px)] transition-all duration-300 ${sidebarOpen ? 'ml-[29rem]' : 'ml-20'}`}>
         <div className="flex-1 flex flex-col">
           <div className="flex-1 min-h-0">
             <Preview 
-              videoUrl={previewVideoUrl}
-              templateDescription={activeSegment?.template?.description}
-              templateJsonPrompt={activeSegment?.template?.jsonPrompt}
+              videoUrl={isExisting ? undefined : previewVideoUrl}
+              templateDescription={isExisting ? undefined : newProjectData.activeSegment?.template?.description}
+              templateJsonPrompt={isExisting ? undefined : newProjectData.activeSegment?.template?.jsonPrompt}
               generatedVideos={allVideos}
-              currentVideoIndex={currentVideoIndex}
+              currentVideoIndex={previewVideoIndex}
               onNavigateVideo={handleVideoNavigation}
             />
           </div>
           <Segement 
             segments={segmentData}
-            onSelectSegment={selectSegment}
-            onCreateSegment={createSegment}
+            onSelectSegment={handleSelectSegment}
+            onCreateSegment={handleCreateSegment}
             canCreateSegment={canCreateSegment}
             loading={segmentLoading}
           />
           <Chat 
-            isEnabled={activeSegment ? isChatEnabled(activeSegment.id) : false}
+            isEnabled={!isExisting && newProjectData.activeSegment ? newProjectData.isChatEnabled(newProjectData.activeSegment.id) : false}
             onSendMessage={handleChatMessage}
             loading={segmentLoading}
           />

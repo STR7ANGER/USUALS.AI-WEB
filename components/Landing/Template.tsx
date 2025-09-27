@@ -50,7 +50,6 @@ const Template = () => {
 
   const handleTemplateClick = async (template: any) => {
     try {
-      console.log('🎬 Template: Template clicked:', template)
       const now = new Date()
       const name = `Web Project: ${now.toLocaleString()}`
       const description = 'web project'
@@ -72,10 +71,7 @@ const Template = () => {
       
       // Include video URL if available
       if (template.s3Key) {
-        console.log('🎬 Template: Adding videoUrl to params:', template.s3Key)
         params.append('videoUrl', template.s3Key)
-      } else {
-        console.log('🎬 Template: No videoUrl available for template')
       }
       
       // Include template description if available
@@ -89,7 +85,6 @@ const Template = () => {
       }
       
       const finalUrl = `/video?${params.toString()}`
-      console.log('🎬 Template: Navigating to:', finalUrl)
       router.push(finalUrl)
     } catch (e) {
       console.error('Failed to create project from template click', e)

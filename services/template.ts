@@ -34,7 +34,6 @@ export class TemplateService {
   static async fetchTemplates({ token, page = 1, limit = 20 }: FetchTemplatesParams): Promise<TemplatesResponse> {
     try {
       const url = `${this.baseUrl}?page=${page}&limit=${limit}`;
-      console.log('🌐 TemplateService: Making API call to', url);
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -42,7 +41,6 @@ export class TemplateService {
           'Content-Type': 'application/json',
         },
       });
-      console.log('📡 TemplateService: Response received', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -51,12 +49,6 @@ export class TemplateService {
       }
 
       const data = await response.json();
-      console.log('📊 TemplateService: Response data', { 
-        dataLength: data.data?.length, 
-        total: data.total, 
-        page: data.page, 
-        totalPages: data.totalPages 
-      });
       
       return data;
     } catch (error) {
@@ -68,7 +60,6 @@ export class TemplateService {
 
   static async fetchTrendingTemplates(token: string, description: string = "Trending"): Promise<TrendingTemplatesResponse> {
     try {
-      console.log('🌐 TemplateService: Making API call to trending templates with description:', description);
       const response = await fetch(`${this.baseUrl}/find-similar`, {
         method: 'POST',
         headers: {
@@ -79,7 +70,6 @@ export class TemplateService {
           description: description
         }),
       });
-      console.log('📡 TemplateService: Trending response received', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();

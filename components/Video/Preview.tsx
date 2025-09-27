@@ -41,15 +41,17 @@ const Preview = ({
       : undefined;
   const hasMultipleVideos = generatedVideos.length > 1;
 
-  // Debug logging
+  // Debug logging - only in development and when props actually change
   useEffect(() => {
-    console.log("🎬 Preview: Received props:", {
-      videoUrl,
-      generatedVideos: generatedVideos.length,
-      currentVideoIndex,
-      displayVideoUrl
-    });
-  }, [videoUrl, generatedVideos, currentVideoIndex, displayVideoUrl]);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("🎬 Preview: Received props:", {
+        videoUrl,
+        generatedVideos: generatedVideos.length,
+        currentVideoIndex,
+        displayVideoUrl
+      });
+    }
+  }, [videoUrl, generatedVideos.length, currentVideoIndex, displayVideoUrl]);
 
   // Video control functions
   const togglePlayPause = () => {

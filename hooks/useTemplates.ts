@@ -24,8 +24,6 @@ export const useTemplates = (): UseTemplatesReturn => {
   const [totalPages, setTotalPages] = useState<number>(0);
 
   const fetchTemplates = useCallback(async (page: number = 1, append: boolean = false) => {
-    console.log('🔍 fetchTemplates called:', { hasToken: !!token, isAuthenticated, loading, page, append });
-
     if (!token || !isAuthenticated) {
       setError('Authentication required');
       return;
@@ -35,7 +33,6 @@ export const useTemplates = (): UseTemplatesReturn => {
     if (loading) return;
 
     try {
-      console.log('🚀 Making API call for page:', page);
       setLoading(true);
       setError(null);
 
@@ -51,14 +48,6 @@ export const useTemplates = (): UseTemplatesReturn => {
       setTotalPages(response.totalPages);
       setHasMore(response.page < response.totalPages);
       setHasFetched(true);
-      
-      console.log('📊 Templates updated:', { 
-        currentCount: append ? templates.length + response.data.length : response.data.length,
-        total: response.total,
-        page: response.page,
-        totalPages: response.totalPages,
-        hasMore: response.page < response.totalPages
-      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch templates';
       setError(errorMessage);
