@@ -16,6 +16,7 @@ import Segement from '@/components/Video/Segement'
 
 const VideoPageContent = () => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
+  const [activeTab, setActiveTab] = React.useState<'export' | 'template' | 'prompt' | 'audio' | 'setting'>('template')
   const [mounted, setMounted] = React.useState(false)
   const { isAuthenticated, loading, token } = useAuth()
   const router = useRouter()
@@ -284,6 +285,12 @@ const VideoPageContent = () => {
     // For existing projects, we don't create segments in this flow
   }, [isExisting, newProjectData])
 
+  // Handle download button click - open export sidebar
+  const handleDownloadClick = React.useCallback(() => {
+    setActiveTab('export')
+    setSidebarOpen(true)
+  }, [])
+
   // Redirect to home if not authenticated
   React.useEffect(() => {
     if (mounted && !loading && !isAuthenticated) {
@@ -324,7 +331,10 @@ const VideoPageContent = () => {
 
   return (
     <div className="min-h-screen bg-[#111215] text-white">
-      <Header projectName={isExisting ? (projectName || 'Untitled Project') : undefined} />
+      <Header 
+        projectName={isExisting ? (projectName || 'Untitled Project') : undefined} 
+        onDownloadClick={handleDownloadClick}
+      />
       <div className={`flex h-[calc(100vh-64px)] transition-all duration-300 ${sidebarOpen ? 'ml-96' : 'ml-20'}`}>
         <div className="flex-1 flex flex-col">
           <div className="flex-1 min-h-0">
@@ -357,6 +367,8 @@ const VideoPageContent = () => {
         onTemplateSelect={handleTemplateSelect}
         segments={segments}
         projectName={projectName || 'Untitled Project'}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
       
       {/* Error Display */}

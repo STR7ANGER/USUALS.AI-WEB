@@ -17,12 +17,18 @@ type SidebarProps = {
   }) => void
   segments?: Segment[]
   projectName?: string
+  activeTab?: ActiveTab
+  setActiveTab?: (tab: ActiveTab) => void
 }
 
 type ActiveTab = 'export' | 'template' | 'prompt' | 'audio' | 'setting'
 
-const Sidebar = ({ isOpen, setOpen, onTemplateSelect, segments, projectName }: SidebarProps) => {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('template')
+const Sidebar = ({ isOpen, setOpen, onTemplateSelect, segments, projectName, activeTab: externalActiveTab, setActiveTab: setExternalActiveTab }: SidebarProps) => {
+  const [internalActiveTab, setInternalActiveTab] = useState<ActiveTab>('template')
+  
+  // Use external activeTab if provided, otherwise use internal state
+  const activeTab = externalActiveTab || internalActiveTab
+  const setActiveTab = setExternalActiveTab || setInternalActiveTab
   return (
     <>
       {/* Collapsed rail (original look) */}
