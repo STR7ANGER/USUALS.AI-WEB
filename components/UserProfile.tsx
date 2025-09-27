@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 
 const UserProfile = () => {
   const { user, logout } = useAuth()
-  const avatarUrl = user?.avatar || (user as any)?.picture || (user as any)?.image
+  const avatarUrl = user?.avatar || user?.picture || user?.image
   const [open, setOpen] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement | null>(null)
   const [imageError, setImageError] = React.useState(false)

@@ -53,13 +53,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const finalizeWebLogin = async () => {
         try {
           setLoading(true);
-          let tokenData: any = null;
+          let tokenData: { success?: boolean; access_token?: string; user?: AuthUser } | null = null;
           if (code && !accessToken) {
             const res = await fetch(`${API_BASE_URL}/auth/google-redirect?code=${encodeURIComponent(code)}`);
             if (!res.ok) throw new Error("Token exchange failed");
             tokenData = await res.json();
           } else {
-            tokenData = { success: true, access_token: accessToken, user: null };
+            tokenData = { success: true, access_token: accessToken || undefined, user: undefined };
           }
 
           if (tokenData && tokenData.success && tokenData.access_token) {
@@ -117,9 +117,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       const redirectUri = `${window.location.origin}/auth/google-redirect`;
       window.location.href = `${API_BASE_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Login failed:", e);
-      setError(e?.message || "Login failed");
+      setError(e instanceof Error ? e.message : "Login failed");
       setLoading(false);
     }
   }, []);

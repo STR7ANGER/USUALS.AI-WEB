@@ -23,7 +23,7 @@ export interface VideoPlayerControls {
 }
 
 export interface UseVideoPlayerReturn {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   state: VideoPlayerState;
   controls: VideoPlayerControls;
   formatTime: (time: number) => string;

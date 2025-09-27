@@ -48,7 +48,7 @@ const Template = () => {
     }
   }
 
-  const handleTemplateClick = async (template: any) => {
+  const handleTemplateClick = async (template: { id?: string; s3Key?: string; description?: string }) => {
     try {
       const now = new Date()
       const name = `Web Project: ${now.toLocaleString()}`

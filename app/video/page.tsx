@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useSegments } from '@/hooks/useSegments'
@@ -14,7 +14,7 @@ import Preview from '@/components/Video/Preview'
 import Chat from '@/components/Video/Chat'
 import Segement from '@/components/Video/Segement'
 
-const VideoPage = () => {
+const VideoPageContent = () => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const { isAuthenticated, loading, token } = useAuth()
@@ -22,17 +22,17 @@ const VideoPage = () => {
   const searchParams = useSearchParams()
   
   // Get project data from search parameters
-  const projectId = searchParams.get('projectId')
-  const projectName = searchParams.get('projectName')
-  const isExisting = searchParams.get('isExisting') === 'true'
-  const videoUrl = searchParams.get('videoUrl')
-  const templateDescription = searchParams.get('templateDescription')
-  const templateId = searchParams.get('templateId')
+  const projectId = searchParams?.get('projectId')
+  const projectName = searchParams?.get('projectName')
+  const isExisting = searchParams?.get('isExisting') === 'true'
+  const videoUrl = searchParams?.get('videoUrl')
+  const templateDescription = searchParams?.get('templateDescription')
+  const templateId = searchParams?.get('templateId')
   
   // Use different hooks based on whether this is an existing project or new project
   const existingProjectData = useExistingProject(
-    isExisting ? projectId : null,
-    isExisting ? projectName : null
+    isExisting ? (projectId || null) : null,
+    isExisting ? (projectName || null) : null
   );
 
   // Initialize segments hook with initial template data (for new projects)
@@ -61,10 +61,12 @@ const VideoPage = () => {
         id: video.id,
         s3Key: video.s3Key,
         description: video.description,
-        createdAt: video.createdAt,
-        updatedAt: video.updatedAt
+        optimizedPrompt: video.jsonPrompt?.prompt || '',
+        segmentId: seg.id,
+        createdAt: video.createdAt
       })),
-      currentVideoIndex: 0
+      currentVideoIndex: 0,
+      backendSegment: seg // Use the existing segment as backendSegment
     })),
     loading: existingProjectData.loading,
     error: existingProjectData.error,
@@ -82,10 +84,10 @@ const VideoPage = () => {
 
   // Prepare preview data based on project type - moved to top to maintain hook order
   const previewData = React.useMemo(() => {
-    let templateVideo = null;
-    let generatedVideos = [];
+    let templateVideo: { s3Key: string; description: string; isTemplate: boolean } | null = null;
+    let generatedVideos: { s3Key: string; description: string; isTemplate: boolean }[] = [];
     let videoIndex = 0;
-    let previewVideoUrl = null;
+    let previewVideoUrl: string | null = null;
 
     const activeSegment = isExisting 
       ? (segments.length > 0 ? segments[activeSegmentIndex] : null)
@@ -115,7 +117,7 @@ const VideoPage = () => {
       }));
       
       videoIndex = activeSegment.currentVideoIndex || 0;
-      previewVideoUrl = activeSegment.template?.s3Key;
+      previewVideoUrl = activeSegment.template?.s3Key || null;
     }
 
     // Combine template video with generated videos (for new projects)
@@ -204,14 +206,20 @@ const VideoPage = () => {
   }, [isExisting, mounted, isAuthenticated, token, segments.length, templateId, videoUrl, templateDescription, newProjectData])
 
   // Handle template selection from sidebar (only for new projects)
-  const handleTemplateSelect = React.useCallback((template: VideoTemplate) => {
+  const handleTemplateSelect = React.useCallback((template: { id: string; description: string; jsonPrompt: string; s3Key: string }) => {
     const currentActiveSegment = isExisting 
       ? (segments.length > 0 ? segments[activeSegmentIndex] : null)
       : newProjectData.activeSegment;
       
     
     if (!isExisting && currentActiveSegment) {
-      newProjectData.setSegmentTemplate(currentActiveSegment.id, template);
+      // Convert to VideoTemplate format
+      const videoTemplate: VideoTemplate = {
+        ...template,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      newProjectData.setSegmentTemplate(currentActiveSegment.id, videoTemplate);
     } else {
     }
   }, [isExisting, segments, activeSegmentIndex, newProjectData])
@@ -269,9 +277,9 @@ const VideoPage = () => {
   }, [isExisting, segments, newProjectData])
 
   // Handle segment creation (only for new projects or existing projects with less than 5 segments)
-  const handleCreateSegment = React.useCallback(() => {
+  const handleCreateSegment = React.useCallback(async () => {
     if (!isExisting) {
-      newProjectData.createSegment();
+      await newProjectData.createSegment();
     }
     // For existing projects, we don't create segments in this flow
   }, [isExisting, newProjectData])
@@ -321,7 +329,7 @@ const VideoPage = () => {
         <div className="flex-1 flex flex-col">
           <div className="flex-1 min-h-0">
             <Preview 
-              videoUrl={isExisting ? undefined : previewVideoUrl}
+              videoUrl={isExisting ? undefined : (previewVideoUrl || undefined)}
               templateDescription={isExisting ? undefined : newProjectData.activeSegment?.template?.description}
               templateJsonPrompt={isExisting ? undefined : newProjectData.activeSegment?.template?.jsonPrompt}
               generatedVideos={allVideos}
@@ -357,6 +365,21 @@ const VideoPage = () => {
         </div>
       )}
     </div>
+  )
+}
+
+const VideoPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#111215] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F9D312] mx-auto mb-4"></div>
+          <p className="text-white/80">Loading...</p>
+        </div>
+      </div>
+    }>
+      <VideoPageContent />
+    </Suspense>
   )
 }
 
