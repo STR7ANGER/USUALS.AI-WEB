@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SegmentService, Segment, SegmentVideo, SegmentVideosResponse } from '@/services/segment';
 import { useAuth } from './useAuth';
+import { MAX_SEGMENTS } from '../lib/constants';
+import { handleApiError } from '../lib/error-handler';
 
 export interface ExistingSegment extends Segment {
   videos: SegmentVideo[];
@@ -64,8 +66,7 @@ export const useExistingProject = (
       setSegments(segmentsWithVideos);
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch project data';
-      console.error('❌ Error in fetchProjectData:', err);
+      const errorMessage = handleApiError(err);
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -87,8 +88,8 @@ export const useExistingProject = (
     }
   }, [projectId, token, isAuthenticated, fetchProjectData]);
 
-  // Calculate if we can show more segments (max 5 segments)
-  const canShowMoreSegments = segments.length < 5;
+  // Calculate if we can show more segments (max segments from constants)
+  const canShowMoreSegments = segments.length < MAX_SEGMENTS;
 
   return {
     segments,

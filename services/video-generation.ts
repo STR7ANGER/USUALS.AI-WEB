@@ -1,5 +1,6 @@
-import { API_BASE_URL } from '../app/providers';
+import { API_BASE_URL } from '../lib/constants';
 import { getVideoUrl } from '../lib/video-utils';
+import { logError } from '../lib/error-handler';
 
 export interface GenerateVideoRequest {
   description: string;
@@ -43,7 +44,7 @@ export class VideoGenerationService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('VideoGenerationService: Error response', errorText);
+        logError(`Failed to generate video: ${response.status} ${response.statusText}`, 'VideoGenerationService');
         throw new Error(`Failed to generate video: ${response.status} ${response.statusText}`);
       }
 
@@ -51,7 +52,7 @@ export class VideoGenerationService {
       
       return data;
     } catch (error) {
-      console.error('Error generating video:', error);
+      logError(error, 'VideoGenerationService.generateVideo');
       throw error;
     }
   }

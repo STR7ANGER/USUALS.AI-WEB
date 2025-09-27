@@ -110,7 +110,7 @@ const Header = () => {
                   ? 'text-[#F9D312]' 
                   : 'text-white/80 hover:bg-white/10 hover:text-white'
               }`}
-              href="/History"
+              href="/history"
             >
               History
             </Link>

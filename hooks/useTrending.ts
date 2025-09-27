@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TemplateService, VideoTemplate } from '../services/template';
 import { useAuth } from './useAuth';
+import { ERROR_MESSAGES } from '../lib/constants';
+import { handleApiError } from '../lib/error-handler';
 
 export interface UseTrendingReturn {
   trendingTemplates: VideoTemplate[];
@@ -25,7 +27,7 @@ export const useTrending = (): UseTrendingReturn => {
   const fetchTrendingTemplates = useCallback(async (description: string = "Trending") => {
 
     if (!token || !isAuthenticated) {
-      setError('Authentication required');
+      setError(ERROR_MESSAGES.AUTH_REQUIRED);
       return;
     }
 
@@ -54,13 +56,12 @@ export const useTrending = (): UseTrendingReturn => {
       setTrendingTemplates(trendingData.templates.slice(0, 4));
       setHasFetched(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch trending templates';
+      const errorMessage = handleApiError(err);
       setError(errorMessage);
-      console.error('Error in fetchTrendingTemplates:', err);
     } finally {
       setLoading(false);
     }
-  }, [token, isAuthenticated, loading, hasFetched]);
+  }, [token, isAuthenticated]);
 
   const fetchByDescription = useCallback(async (description: string) => {
     await fetchTrendingTemplates(description);

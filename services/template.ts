@@ -1,4 +1,5 @@
-import { API_BASE_URL } from '../app/providers';
+import { API_BASE_URL } from '../lib/constants';
+import { logError } from '../lib/error-handler';
 
 export interface VideoTemplate {
   id: string;
@@ -44,7 +45,7 @@ export class TemplateService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('TemplateService: Error response', errorText);
+        logError(`Failed to fetch templates: ${response.status} ${response.statusText}`, 'TemplateService');
         throw new Error(`Failed to fetch templates: ${response.status} ${response.statusText}`);
       }
 
@@ -52,7 +53,7 @@ export class TemplateService {
       
       return data;
     } catch (error) {
-      console.error('Error fetching templates:', error);
+      logError(error, 'TemplateService.fetchTemplates');
       throw error;
     }
   }

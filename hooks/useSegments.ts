@@ -5,6 +5,7 @@ import { VideoTemplate } from '@/services/template';
 import { GeneratedVideo, VideoGenerationService, GenerateVideoRequest } from '@/services/video-generation';
 import { SegmentService, Segment as BackendSegment } from '@/services/segment';
 import { useAuth } from './useAuth';
+import { MAX_SEGMENTS } from '../lib/constants';
 
 export interface SegmentTemplate {
   id: string;
@@ -36,8 +37,6 @@ export interface UseSegmentsReturn {
   canCreateSegment: boolean;
   isChatEnabled: (segmentId: string) => boolean;
 }
-
-const MAX_SEGMENTS = 5;
 
 export const useSegments = (projectId?: string, initialTemplateData?: { templateId?: string; videoUrl?: string; description?: string }): UseSegmentsReturn => {
   const { token } = useAuth();
@@ -91,7 +90,7 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
     };
 
     initializeSegments();
-  }, [projectId, token]); // Removed initialTemplateData from dependencies to prevent re-runs
+  }, [projectId, token]);
 
   const activeSegment = segments.find(segment => segment.isActive) || null;
 

@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TemplateService, VideoTemplate, TemplatesResponse } from '../services/template';
 import { useAuth } from './useAuth';
+import { ERROR_MESSAGES, DEFAULT_PAGE_SIZE } from '../lib/constants';
+import { handleApiError } from '../lib/error-handler';
 
 export interface UseTemplatesReturn {
   templates: VideoTemplate[];
@@ -25,7 +27,7 @@ export const useTemplates = (): UseTemplatesReturn => {
 
   const fetchTemplates = useCallback(async (page: number = 1, append: boolean = false) => {
     if (!token || !isAuthenticated) {
-      setError('Authentication required');
+      setError(ERROR_MESSAGES.AUTH_REQUIRED);
       return;
     }
 
@@ -36,7 +38,7 @@ export const useTemplates = (): UseTemplatesReturn => {
       setLoading(true);
       setError(null);
 
-      const response = await TemplateService.fetchTemplates({ token, page, limit: 20 });
+      const response = await TemplateService.fetchTemplates({ token, page, limit: DEFAULT_PAGE_SIZE });
       
       if (append) {
         setTemplates(prev => [...prev, ...response.data]);
@@ -49,13 +51,12 @@ export const useTemplates = (): UseTemplatesReturn => {
       setHasMore(response.page < response.totalPages);
       setHasFetched(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch templates';
+      const errorMessage = handleApiError(err);
       setError(errorMessage);
-      console.error('Error in fetchTemplates:', err);
     } finally {
       setLoading(false);
     }
-  }, [token, isAuthenticated, loading, templates.length]);
+  }, [token, isAuthenticated]);
 
   const refresh = useCallback(async () => {
     setTemplates([]);

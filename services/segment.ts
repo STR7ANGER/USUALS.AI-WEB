@@ -40,8 +40,11 @@ export interface SegmentVideosResponse {
   count: number;
 }
 
+import { API_BASE_URL } from '../lib/constants';
+import { logError } from '../lib/error-handler';
+
 export class SegmentService {
-  private static baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+  private static baseUrl = API_BASE_URL || '';
 
   static async createSegment(token: string, data: CreateSegmentRequest): Promise<Segment> {
     const response = await fetch(`${this.baseUrl}/web/segment`, {
@@ -54,6 +57,7 @@ export class SegmentService {
     });
 
     if (!response.ok) {
+      logError(`Failed to create segment: ${response.statusText}`, 'SegmentService.createSegment');
       throw new Error(`Failed to create segment: ${response.statusText}`);
     }
 

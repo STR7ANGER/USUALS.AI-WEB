@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { API_BASE_URL } from '../lib/constants';
 
 export interface AuthUser {
   name?: string | null;
@@ -22,8 +23,6 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 function isRunningInBrowser() {
   return typeof window !== "undefined";

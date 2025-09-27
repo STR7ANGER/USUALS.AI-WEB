@@ -1,7 +1,6 @@
 "use client"
 
-import { useAuthContext } from "../app/providers";
-
-export const useAuth = () => useAuthContext();
+// Re-export useAuthContext as useAuth for cleaner imports
+export { useAuthContext as useAuth } from "../app/providers";
 
 

@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectService, Project } from '../services/project';
 import { useAuth } from './useAuth';
+import { ERROR_MESSAGES } from '../lib/constants';
+import { handleApiError } from '../lib/error-handler';
 
 export interface UseProjectsReturn {
   projects: Project[];
@@ -24,7 +26,7 @@ export const useProjects = (): UseProjectsReturn => {
   const fetchProjects = useCallback(async () => {
 
     if (!token || !isAuthenticated) {
-      setError('Authentication required');
+      setError(ERROR_MESSAGES.AUTH_REQUIRED);
       return;
     }
 
@@ -42,13 +44,12 @@ export const useProjects = (): UseProjectsReturn => {
       setProjects(projectsData);
       setHasFetched(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch projects';
+      const errorMessage = handleApiError(err);
       setError(errorMessage);
-      console.error('Error in fetchProjects:', err);
     } finally {
       setLoading(false);
     }
-  }, [token, isAuthenticated, loading, hasFetched]);
+  }, [token, isAuthenticated]);
 
   const refresh = useCallback(async () => {
     setProjects([]);

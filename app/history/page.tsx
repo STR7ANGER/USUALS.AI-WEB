@@ -2,7 +2,7 @@ import React from 'react'
 import ProjectGrid from '@/components/Previous-Project/ProjectGrid'
 import Header from '@/components/Landing/Header'
 
-const History = () => {
+const HistoryPage = () => {
   return (
     <div className="min-h-screen bg-black">
       <Header />
@@ -24,4 +24,4 @@ const History = () => {
   )
 }
 
-export default History
+export default HistoryPage

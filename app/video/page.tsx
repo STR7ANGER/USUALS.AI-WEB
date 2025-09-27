@@ -6,8 +6,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSegments } from '@/hooks/useSegments'
 import { useExistingProject } from '@/hooks/useExistingProject'
 import { VideoTemplate, TemplateService } from '@/services/template'
-import { VideoGenerationService } from '@/services/video-generation'
 import { getVideoUrl } from '@/lib/video-utils'
+import { SIDEBAR_WIDTH, SIDEBAR_RAIL_WIDTH } from '@/lib/constants'
 import Header from '@/components/Video/Header'
 import Sidebar from '@/components/Video/Sidebar'
 import Preview from '@/components/Video/Preview'
@@ -317,7 +317,7 @@ const VideoPage = () => {
   return (
     <div className="min-h-screen bg-[#111215] text-white">
       <Header projectName={isExisting ? (projectName || 'Untitled Project') : undefined} />
-      <div className={`flex h-[calc(100vh-64px)] transition-all duration-300 ${sidebarOpen ? 'ml-[29rem]' : 'ml-20'}`}>
+      <div className={`flex h-[calc(100vh-64px)] transition-all duration-300 ${sidebarOpen ? 'ml-96' : 'ml-20'}`}>
         <div className="flex-1 flex flex-col">
           <div className="flex-1 min-h-0">
             <Preview 

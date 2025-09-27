@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react'
 import ProjectCard from './ProjectCard'
 import { useProjects } from '@/hooks/useProjects'

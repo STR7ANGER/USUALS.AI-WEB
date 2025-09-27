@@ -1,4 +1,5 @@
-import { API_BASE_URL } from '../app/providers';
+import { API_BASE_URL } from '../lib/constants';
+import { handleApiError, logError } from '../lib/error-handler';
 
 export interface Project {
   id: string;
@@ -46,7 +47,7 @@ export class ProjectService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('ProjectService: Error response', errorText);
+        logError(`Failed to fetch projects: ${response.status} ${response.statusText}`, 'ProjectService');
         throw new Error(`Failed to fetch projects: ${response.status} ${response.statusText}`);
       }
 
@@ -55,7 +56,7 @@ export class ProjectService {
       // Handle both array response and object response
       return Array.isArray(data) ? data : (data.projects || data.data || []);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      logError(error, 'ProjectService.fetchProjects');
       throw error;
     }
   }

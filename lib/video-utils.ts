@@ -2,6 +2,8 @@
  * Utility functions for handling video URLs and s3Keys
  */
 
+import { CLOUDFRONT_URL } from './constants';
+
 /**
  * Constructs a full video URL from an s3Key using CloudFront
  * @param s3Key - The s3 key for the video
@@ -15,13 +17,16 @@ export function getVideoUrl(s3Key: string): string {
     return s3Key;
   }
   
-  // Use CloudFront URL from environment or fallback
-  const cloudFrontUrl = process.env.NEXT_PUBLIC_CLOUDFRONT_URL || 'https://ds0fghatf06yb.cloudfront.net';
+  // Use CloudFront URL from environment
+  if (!CLOUDFRONT_URL) {
+    console.error('CLOUDFRONT_URL environment variable is not set');
+    return '';
+  }
   
   // Remove leading slash from s3Key if present
   const cleanS3Key = s3Key.startsWith('/') ? s3Key.slice(1) : s3Key;
   
-  return `${cloudFrontUrl}/${cleanS3Key}`;
+  return `${CLOUDFRONT_URL}/${cleanS3Key}`;
 }
 
 /**
