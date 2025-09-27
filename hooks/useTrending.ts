@@ -23,14 +23,6 @@ export const useTrending = (): UseTrendingReturn => {
   const initialFetchCalled = useRef<boolean>(false);
 
   const fetchTrendingTemplates = useCallback(async (description: string = "Trending") => {
-    console.log('🔍 fetchTrendingTemplates called:', { 
-      hasToken: !!token, 
-      isAuthenticated, 
-      initialFetchCalled: initialFetchCalled.current, 
-      loading, 
-      hasFetched,
-      description
-    });
 
     if (!token || !isAuthenticated) {
       setError('Authentication required');
@@ -39,18 +31,15 @@ export const useTrending = (): UseTrendingReturn => {
 
     // Only prevent duplicate calls for the initial "Trending" call
     if (description === "Trending" && initialFetchCalled.current && hasFetched) {
-      console.log('🚫 Skipping duplicate initial Trending call');
       return;
     }
 
     // Prevent calls if already loading
     if (loading) {
-      console.log('🚫 Skipping call - already loading');
       return;
     }
 
     try {
-      console.log('🚀 Making trending API call with description:', description);
       
       // Mark initial fetch as called only for "Trending"
       if (description === "Trending") {

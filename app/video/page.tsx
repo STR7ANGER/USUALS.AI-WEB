@@ -135,17 +135,6 @@ const VideoPage = () => {
   
   // activeSegment is now calculated inside useMemo above
   
-  // Debug logging - only log when key parameters change, not on every render
-  React.useEffect(() => {
-    console.log('🎬 Video Page: Received search params:', {
-      projectId,
-      projectName,
-      isExisting,
-      videoUrl,
-      templateDescription,
-      templateId
-    })
-  }, [projectId, projectName, isExisting, videoUrl, templateDescription, templateId])
 
 
   // Ensure component is mounted on client side
@@ -160,12 +149,6 @@ const VideoPage = () => {
       if (!isExisting && mounted && isAuthenticated && segments.length > 0 && !segments[0].template && (templateId || (videoUrl && templateDescription))) {
         const firstSegment = segments[0]
         
-        console.log('🎬 Video Page: Applying initial template to first segment:', {
-          templateId,
-          videoUrl,
-          templateDescription,
-          firstSegmentId: firstSegment.id
-        })
         
         try {
           if (templateId && token) {
@@ -175,7 +158,6 @@ const VideoPage = () => {
             
             if (template) {
               newProjectData.setSegmentTemplate(firstSegment.id, template)
-              console.log('✅ Applied template from paginated results:', template)
               return
             } else {
               console.warn('Template not found in first page, trying additional pages...')
@@ -186,7 +168,6 @@ const VideoPage = () => {
                   const foundTemplate = nextResponse.data.find(t => t.id === templateId)
                   if (foundTemplate) {
                     newProjectData.setSegmentTemplate(firstSegment.id, foundTemplate)
-                    console.log(`✅ Applied template from page ${page}:`, foundTemplate)
                     return
                   }
                 } catch (error) {
@@ -209,7 +190,6 @@ const VideoPage = () => {
             }
             
             newProjectData.setSegmentTemplate(firstSegment.id, templateFromUrl)
-            console.log('✅ Applied template from URL parameters:', templateFromUrl)
           }
         } catch (error) {
           console.error('❌ Failed to apply initial template:', error)
@@ -229,18 +209,10 @@ const VideoPage = () => {
       ? (segments.length > 0 ? segments[activeSegmentIndex] : null)
       : newProjectData.activeSegment;
       
-    console.log('🎬 Video Page: Template selection attempt:', {
-      isExisting,
-      hasActiveSegment: !!currentActiveSegment,
-      activeSegmentId: currentActiveSegment?.id,
-      templateId: template.id
-    });
     
     if (!isExisting && currentActiveSegment) {
-      console.log('🎬 Video Page: Applying template to segment:', currentActiveSegment.id, template.description);
       newProjectData.setSegmentTemplate(currentActiveSegment.id, template);
     } else {
-      console.log('🎬 Video Page: Template selection blocked - isExisting:', isExisting, 'hasActiveSegment:', !!currentActiveSegment);
     }
   }, [isExisting, segments, activeSegmentIndex, newProjectData])
 
@@ -251,7 +223,6 @@ const VideoPage = () => {
       : newProjectData.activeSegment;
       
     if (!isExisting && currentActiveSegment && newProjectData.isChatEnabled(currentActiveSegment.id)) {
-      console.log('🎬 Video Page: Generating video for segment:', currentActiveSegment.id, message)
       await newProjectData.generateVideo(currentActiveSegment.id, message)
     }
   }, [isExisting, segments, activeSegmentIndex, newProjectData])
@@ -278,14 +249,6 @@ const VideoPage = () => {
         // Update the current video index for existing projects
         setCurrentVideoIndex(newIndex);
         
-        console.log('🎬 Video navigation for existing project:', { 
-          direction, 
-          currentIndex, 
-          newIndex, 
-          maxIndex,
-          videoCount: currentActiveSegment.videos.length,
-          segmentId: currentActiveSegment.id
-        });
       } else {
         newProjectData.navigateVideo(currentActiveSegment.id, direction)
       }
@@ -294,17 +257,14 @@ const VideoPage = () => {
 
   // Handle segment selection
   const handleSelectSegment = React.useCallback((segmentId: string) => {
-    console.log('🎬 Video Page: Selecting segment:', segmentId, 'isExisting:', isExisting);
     if (isExisting) {
       const segmentIndex = segments.findIndex(seg => seg.id === segmentId);
       if (segmentIndex !== -1) {
         setActiveSegmentIndex(segmentIndex);
         setCurrentVideoIndex(0); // Reset to first video when switching segments
-        console.log('🎬 Video Page: Set active segment index to:', segmentIndex);
       }
     } else {
       newProjectData.selectSegment(segmentId);
-      console.log('🎬 Video Page: Called newProjectData.selectSegment for:', segmentId);
     }
   }, [isExisting, segments, newProjectData])
 

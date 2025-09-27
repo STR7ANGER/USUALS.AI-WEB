@@ -22,13 +22,6 @@ export const useProjects = (): UseProjectsReturn => {
   const fetchCalled = useRef<boolean>(false);
 
   const fetchProjects = useCallback(async () => {
-    console.log('🔍 fetchProjects called:', { 
-      hasToken: !!token, 
-      isAuthenticated, 
-      fetchCalled: fetchCalled.current, 
-      loading, 
-      hasFetched 
-    });
 
     if (!token || !isAuthenticated) {
       setError('Authentication required');
@@ -37,12 +30,10 @@ export const useProjects = (): UseProjectsReturn => {
 
     // Prevent React Strict Mode double calls
     if (fetchCalled.current || loading || hasFetched) {
-      console.log('🚫 Skipping duplicate call');
       return; // Prevent duplicate calls
     }
 
     try {
-      console.log('🚀 Making API call');
       fetchCalled.current = true; // Mark as called
       setLoading(true);
       setError(null);

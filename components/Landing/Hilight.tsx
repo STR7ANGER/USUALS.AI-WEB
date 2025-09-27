@@ -43,7 +43,6 @@ const Hilight = () => {
 
   const handleCardClick = async (card: DisplayCard) => {
     try {
-      console.log('🎬 Hilight: Card clicked:', card)
       const now = new Date()
       const name = `Web Project: ${now.toLocaleString()}`
       const description = 'web project'
@@ -65,10 +64,7 @@ const Hilight = () => {
       
       // Include video URL if available
       if (card.videoUrl) {
-        console.log('🎬 Hilight: Adding videoUrl to params:', card.videoUrl)
         params.append('videoUrl', card.videoUrl)
-      } else {
-        console.log('🎬 Hilight: No videoUrl available for card')
       }
       
       // Include template description if available
@@ -82,7 +78,6 @@ const Hilight = () => {
       }
       
       const finalUrl = `/video?${params.toString()}`
-      console.log('🎬 Hilight: Navigating to:', finalUrl)
       router.push(finalUrl)
     } catch (e) {
       console.error('Failed to create project from hilight click', e)
@@ -159,19 +154,12 @@ const Hilight = () => {
 
   // Use trending templates if logged in and loaded, otherwise use default cards
   const displayCards: DisplayCard[] = isAuthenticated && trendingTemplates.length > 0 
-    ? trendingTemplates.map(template => {
-        console.log('🎬 Hilight: Mapping template to display card:', {
-          id: template.id,
-          description: template.description,
-          s3Key: template.s3Key
-        })
-        return {
+    ? trendingTemplates.map(template => ({
           id: template.id,
           title: template.description.toUpperCase(),
           subtitle: template.description,
           videoUrl: template.s3Key
-        }
-      })
+        }))
     : defaultCards
 
   return (

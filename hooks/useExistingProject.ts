@@ -32,9 +32,6 @@ export const useExistingProject = (
       return;
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 useExistingProject: Fetching data for project:', projectId);
-    }
     
     try {
       setLoading(true);

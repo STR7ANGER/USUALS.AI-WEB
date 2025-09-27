@@ -36,7 +36,6 @@ export class ProjectService {
 
   static async fetchProjects({ token, page = 1, limit = 20 }: FetchProjectsParams): Promise<Project[]> {
     try {
-      console.log('🌐 ProjectService: Making API call to', this.baseUrl);
       const response = await fetch(`${this.baseUrl}?page=${page}&limit=${limit}`, {
         method: 'GET',
         headers: {
@@ -44,7 +43,6 @@ export class ProjectService {
           'Content-Type': 'application/json',
         },
       });
-      console.log('📡 ProjectService: Response received', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();

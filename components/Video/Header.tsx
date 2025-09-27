@@ -73,7 +73,7 @@ const Header: React.FC<HeaderProps> = ({ projectName: propProjectName }) => {
           {/* Download button */}
           <button className="inline-flex items-center gap-2 rounded-lg bg-[#F9D31226] px-4 py-2 text-sm font-medium text-black hover:bg-[#F9D312]/90 transition-colors">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M12.6666 13.3337L3.33325 13.3337M3.99992 6.55393C5.03696 5.15166 6.24844 3.89221 7.60371 2.80667C7.71997 2.71355 7.85994 2.66699 7.99992 2.66699M11.9999 6.55393C10.9629 5.15166 9.7514 3.89221 8.39613 2.80667C8.27987 2.71355 8.13989 2.66699 7.99992 2.66699M7.99992 2.66699L7.99992 10.667" stroke="#F9D312" stroke-width="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+<path d="M12.6666 13.3337L3.33325 13.3337M3.99992 6.55393C5.03696 5.15166 6.24844 3.89221 7.60371 2.80667C7.71997 2.71355 7.85994 2.66699 7.99992 2.66699M11.9999 6.55393C10.9629 5.15166 9.7514 3.89221 8.39613 2.80667C8.27987 2.71355 8.13989 2.66699 7.99992 2.66699M7.99992 2.66699L7.99992 10.667" stroke="#F9D312" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
 </svg>
 
             <span className="text-[#F9D312]">Download</span>

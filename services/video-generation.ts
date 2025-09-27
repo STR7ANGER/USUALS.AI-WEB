@@ -30,8 +30,6 @@ export class VideoGenerationService {
 
   static async generateVideo(token: string, request: GenerateVideoRequest): Promise<GenerateVideoResponse> {
     try {
-      console.log('🎬 VideoGenerationService: Making API call to', `${this.baseUrl}/optimize-and-generate`);
-      console.log('🎬 VideoGenerationService: Request payload:', request);
       
       const response = await fetch(`${this.baseUrl}/optimize-and-generate`, {
         method: 'POST',
@@ -42,7 +40,6 @@ export class VideoGenerationService {
         body: JSON.stringify(request),
       });
 
-      console.log('📡 VideoGenerationService: Response received', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -51,7 +48,6 @@ export class VideoGenerationService {
       }
 
       const data = await response.json();
-      console.log('✅ VideoGenerationService: Success response', data);
       
       return data;
     } catch (error) {

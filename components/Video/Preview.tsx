@@ -41,17 +41,6 @@ const Preview = ({
       : undefined;
   const hasMultipleVideos = generatedVideos.length > 1;
 
-  // Debug logging - only in development and when props actually change
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log("🎬 Preview: Received props:", {
-        videoUrl,
-        generatedVideos: generatedVideos.length,
-        currentVideoIndex,
-        displayVideoUrl
-      });
-    }
-  }, [videoUrl, generatedVideos.length, currentVideoIndex, displayVideoUrl]);
 
   // Video control functions
   const togglePlayPause = () => {
@@ -210,25 +199,13 @@ const Preview = ({
                 className="w-full h-full object-cover"
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
-                onLoadStart={() => {
-                  console.log(
-                    "🎬 Preview: Video load started for URL:",
-                    displayVideoUrl
-                  );
-                  handleLoadStart();
-                }}
+                onLoadStart={handleLoadStart}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onEnded={() => setIsPlaying(false)}
                 onError={(e) => {
                   console.error("🎬 Preview: Video load error:", e);
                   console.error("🎬 Preview: Video URL that failed:", displayVideoUrl);
-                }}
-                onLoadedData={() => {
-                  console.log(
-                    "🎬 Preview: Video data loaded successfully for URL:",
-                    displayVideoUrl
-                  );
                 }}
                 muted={isMuted}
                 loop
