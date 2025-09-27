@@ -15,7 +15,7 @@ const Chat = ({ isEnabled, onSendMessage, loading = false }: ChatProps) => {
 
     try {
       await onSendMessage(message.trim())
-      setMessage('') // Clear input after successful send
+      setMessage('') // Clear input after done
     } catch (error) {
       console.error('Failed to send message:', error)
     }
