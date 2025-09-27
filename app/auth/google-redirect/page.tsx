@@ -2,16 +2,18 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { BASE_URL } from "../../../lib/constants";
 
 const GoogleRedirectPage = () => {
   const router = useRouter();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace("/");
+      // Redirect to BASE_URL instead of relative path
+      window.location.href = BASE_URL;
     }, 1500);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">

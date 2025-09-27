@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { API_BASE_URL } from '../lib/constants';
+import { API_BASE_URL, BASE_URL } from '../lib/constants';
 
 export interface AuthUser {
   name?: string | null;
@@ -69,7 +69,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error("OAuth callback handling failed", err);
           setError("Failed to complete login. Please try again.");
         } finally {
-          window.history.replaceState({}, document.title, "/");
+          // Redirect to BASE_URL after successful login
+          window.location.href = BASE_URL;
           setLoading(false);
         }
       };
@@ -115,7 +116,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setError(null);
       setLoading(true);
-      const redirectUri = `${window.location.origin}/auth/google-redirect`;
+      const redirectUri = `${BASE_URL}/auth/google-redirect`;
       window.location.href = `${API_BASE_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
     } catch (e: unknown) {
       console.error("Login failed:", e);
