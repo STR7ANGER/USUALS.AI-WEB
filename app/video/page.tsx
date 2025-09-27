@@ -356,6 +356,7 @@ const VideoPageContent = () => {
         setOpen={setSidebarOpen}
         onTemplateSelect={handleTemplateSelect}
         segments={segments}
+        projectName={projectName || 'Untitled Project'}
       />
       
       {/* Error Display */}

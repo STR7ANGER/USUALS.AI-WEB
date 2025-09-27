@@ -1,66 +1,185 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { Segment } from '@/hooks/useSegments'
+import { 
+  exportAllVideos, 
+  exportSegmentVideos, 
+  hasExportableVideos, 
+  getVideoCount, 
+  getSegmentVideoCount 
+} from '@/lib/export-utils'
 
-const Export = () => {
+interface ExportProps {
+  segments: Segment[]
+  projectName?: string
+}
+
+const Export = ({ segments, projectName }: ExportProps) => {
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportProgress, setExportProgress] = useState(0)
+  const [currentFile, setCurrentFile] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const totalVideos = getVideoCount(segments)
+  const hasVideos = hasExportableVideos(segments)
+
+  const handleExportAll = async () => {
+    if (!hasVideos) {
+      setError('No videos available to export')
+      return
+    }
+
+    try {
+      setIsExporting(true)
+      setError(null)
+      setExportProgress(0)
+      setCurrentFile('')
+
+      await exportAllVideos(
+        segments, 
+        projectName,
+        (progress, filename) => {
+          setExportProgress(progress)
+          setCurrentFile(filename)
+        }
+      )
+
+      setExportProgress(100)
+      setCurrentFile('Export completed!')
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setIsExporting(false)
+        setExportProgress(0)
+        setCurrentFile('')
+      }, 2000)
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export failed')
+      setIsExporting(false)
+      setExportProgress(0)
+      setCurrentFile('')
+    }
+  }
+
+  const handleExportSegment = async (segment: Segment) => {
+    const segmentVideoCount = getSegmentVideoCount(segment)
+    
+    if (segmentVideoCount === 0) {
+      setError(`No videos available in ${segment.name}`)
+      return
+    }
+
+    try {
+      setIsExporting(true)
+      setError(null)
+      setExportProgress(0)
+      setCurrentFile('')
+
+      await exportSegmentVideos(
+        segment, 
+        projectName,
+        (progress, filename) => {
+          setExportProgress(progress)
+          setCurrentFile(filename)
+        }
+      )
+
+      setExportProgress(100)
+      setCurrentFile('Export completed!')
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setIsExporting(false)
+        setExportProgress(0)
+        setCurrentFile('')
+      }, 2000)
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export failed')
+      setIsExporting(false)
+      setExportProgress(0)
+      setCurrentFile('')
+    }
+  }
+
   return (
     <div className="space-y-6">
-      
-    
-      {/* Export as One Clip */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-green-400">Export as One Clip</h3>
-        
-        {/* Video Thumbnail 1 - iPod/Retro Scene */}
-        <div className="relative w-full h-32 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg overflow-hidden">
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="absolute bottom-2 left-2 right-2">
-            <div className="bg-white/90 rounded-lg p-2 text-black text-xs">
-              <div className="flex items-center space-x-2 mb-1">
-                <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                <span className="font-medium">Now Playing</span>
-              </div>
-              <div className="text-xs">In The Rain - Addison Rae</div>
-              <div className="text-xs text-gray-600">103 of 260</div>
-              <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
-                <div className="bg-gray-600 h-1 rounded-full" style={{width: '75%'}}></div>
-              </div>
-              <div className="text-xs text-gray-500 mt-1">1:55</div>
-            </div>
+      {/* Export Progress */}
+      {isExporting && (
+        <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-white/90">Exporting...</span>
+            <span className="text-sm text-white/90">{Math.round(exportProgress)}%</span>
           </div>
-          {/* CD overlay */}
-          <div className="absolute top-2 left-2 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-            <div className="w-4 h-4 bg-pink-400 rounded-full"></div>
+          <div className="w-full bg-white/10 rounded-full h-2 mb-2">
+            <div 
+              className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${exportProgress}%` }}
+            ></div>
           </div>
+          {currentFile && (
+            <p className="text-xs text-white/60 truncate">{currentFile}</p>
+          )}
         </div>
-        
-        <button className="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors">
-          Export
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+          <p className="text-red-400 text-sm">{error}</p>
+          <button 
+            onClick={() => setError(null)}
+            className="text-red-300 hover:text-red-200 text-xs mt-1 underline transition-colors"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Export All */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-white/90">Export All</h3>
+        <button 
+          onClick={handleExportAll}
+          disabled={!hasVideos || isExporting}
+          className="w-full py-3 px-4 bg-yellow-400/20 border border-yellow-400 rounded-lg text-yellow-400 hover:bg-yellow-400/30 disabled:bg-white/5 disabled:border-white/10 disabled:text-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+        >
+          {isExporting ? 'Exporting...' : `Export All Videos (${totalVideos} videos as ZIP)`}
         </button>
       </div>
 
-      {/* Export Clips Separately */}
+      {/* Export One (By Segment) */}
       <div className="space-y-3">
-        <h3 className="text-sm font-medium text-green-400">Export Clips Separately</h3>
-        
-        {/* Video Thumbnail 2 - Concert Scene */}
-        <div className="relative w-full h-32 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 rounded-lg overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 bg-white/20 rounded-full blur-sm"></div>
-          </div>
-          <div className="absolute bottom-2 left-2 right-2">
-            <div className="text-white text-xs font-medium">Video 1</div>
-          </div>
-        </div>
-        
-        {/* Video Thumbnail 3 - Another concert scene */}
-        <div className="relative w-full h-32 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 rounded-lg overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 bg-white/20 rounded-full blur-sm"></div>
-          </div>
-          <div className="absolute bottom-2 left-2 right-2">
-            <div className="text-white text-xs font-medium">Video 2</div>
-          </div>
+        <h3 className="text-sm font-medium text-white/90">Export One</h3>
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {segments.map((segment) => {
+            const segmentVideoCount = getSegmentVideoCount(segment)
+            
+            return (
+              <button 
+                key={segment.id}
+                onClick={() => handleExportSegment(segment)}
+                disabled={segmentVideoCount === 0 || isExporting}
+                className="w-full py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 disabled:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${segmentVideoCount > 0 ? 'bg-yellow-400' : 'bg-white/60'}`}></div>
+                    <span>{segment.name}</span>
+                  </div>
+                  <span className="text-white/60 text-xs">
+                    {segmentVideoCount} video{segmentVideoCount !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+          
+          {segments.length === 0 && (
+            <div className="text-center py-8 text-white/40">
+              <p className="text-sm">No segments available</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

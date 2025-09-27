@@ -16,11 +16,12 @@ type SidebarProps = {
     s3Key: string;
   }) => void
   segments?: Segment[]
+  projectName?: string
 }
 
 type ActiveTab = 'export' | 'template' | 'prompt' | 'audio' | 'setting'
 
-const Sidebar = ({ isOpen, setOpen, onTemplateSelect, segments }: SidebarProps) => {
+const Sidebar = ({ isOpen, setOpen, onTemplateSelect, segments, projectName }: SidebarProps) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('template')
   return (
     <>
@@ -123,7 +124,7 @@ const Sidebar = ({ isOpen, setOpen, onTemplateSelect, segments }: SidebarProps) 
               </div>
               
               <div className="space-y-4">
-                {activeTab === 'export' && <Export />}
+                {activeTab === 'export' && <Export segments={segments || []} projectName={projectName} />}
                 {activeTab === 'template' && <Template onTemplateSelect={onTemplateSelect} />}
                 {activeTab === 'audio' && <Audio />}
                 {activeTab === 'setting' && <Setting />}
