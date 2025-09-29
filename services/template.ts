@@ -26,19 +26,26 @@ export interface TrendingTemplatesResponse {
 export interface FetchTemplatesParams {
   page?: number;
   limit?: number;
+  token?: string;
 }
 
 export class TemplateService {
   private static baseUrl = `${API_BASE_URL}/video-templates`;
 
-  static async fetchTemplates({ page = 1, limit = 20 }: FetchTemplatesParams): Promise<TemplatesResponse> {
+  static async fetchTemplates({ page = 1, limit = 20, token }: FetchTemplatesParams): Promise<TemplatesResponse> {
     try {
       const url = `${this.baseUrl}?page=${page}&limit=${limit}`;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
 
       if (!response.ok) {
