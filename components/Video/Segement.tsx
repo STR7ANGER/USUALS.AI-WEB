@@ -104,16 +104,12 @@ const Segement = ({ segments, onSelectSegment, onCreateSegment, canCreateSegment
             className="bg-white/5 rounded-lg w-32 h-20 border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 hover:border-white/20 transition-colors"
             onClick={() => onCreateSegment()}
           >
-            {loading ? (
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white/70"></div>
-            ) : (
-              <>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 5V19M5 12H19" stroke="white" strokeOpacity="0.7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="text-white/70 text-xs mt-1">New Segment</span>
-              </>
-            )}
+            <>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5V19M5 12H19" stroke="white" strokeOpacity="0.7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="text-white/70 text-xs mt-1">New Segment</span>
+            </>
           </div>
         )}
       </div>

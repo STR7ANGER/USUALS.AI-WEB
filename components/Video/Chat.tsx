@@ -4,10 +4,19 @@ interface ChatProps {
   isEnabled: boolean;
   onSendMessage: (message: string) => Promise<void>;
   loading?: boolean;
+  isSolanaTemplate?: boolean;
+  defaultMessage?: string;
 }
 
-const Chat = ({ isEnabled, onSendMessage, loading = false }: ChatProps) => {
+const Chat = ({ isEnabled, onSendMessage, loading = false, isSolanaTemplate = false, defaultMessage }: ChatProps) => {
   const [message, setMessage] = useState('')
+
+  // Set default message for Solana templates
+  React.useEffect(() => {
+    if (isSolanaTemplate && defaultMessage && !message) {
+      setMessage(defaultMessage)
+    }
+  }, [isSolanaTemplate, defaultMessage, message])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,7 +48,7 @@ const Chat = ({ isEnabled, onSendMessage, loading = false }: ChatProps) => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={isEnabled ? 'how about "A bird flying on the moon with a red cape"...' : 'Select a template to enable chat...'}
+                placeholder={isEnabled ? (isSolanaTemplate ? 'Edit the Flash Trade message or type your own...' : 'how about "A bird flying on the moon with a red cape"...') : 'Select a template to enable chat...'}
                 disabled={!isEnabled || loading}
                 className="flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none text-base disabled:cursor-not-allowed"
               />

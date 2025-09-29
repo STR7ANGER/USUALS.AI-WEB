@@ -11,7 +11,7 @@ const Header = () => {
   const currentPath = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
-  const { isAuthenticated, token, login } = useAuth();
+  const { isAuthenticated, token, login, user } = useAuth();
 
   const handleVideoNavClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     try {
@@ -30,6 +30,57 @@ const Header = () => {
     } catch (error) {
       console.error("Failed to create project from header Video click", error);
       router.push("/video");
+    }
+  };
+
+  const decodeJwtPayload = (jwt: string): Record<string, unknown> | null => {
+    try {
+      const base64Url = jwt.split(".")[1];
+      if (!base64Url) return null;
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch {
+      return null;
+    }
+  };
+
+  const resolveUserId = (): string | null => {
+    // Try common fields on user object first
+    const potential = (user && (user as any)) || {};
+    const directId = potential.id || potential.userId || potential.uid || potential.sub;
+    if (typeof directId === "string" && directId.length > 0) return directId;
+    // Fallback to decoding JWT
+    if (token) {
+      const payload = decodeJwtPayload(token);
+      const fromJwt = payload && (payload["userId"] || payload["sub"] || payload["id"]);
+      if (typeof fromJwt === "string" && fromJwt.length > 0) return fromJwt;
+    }
+    return null;
+  };
+
+  const handlePricingClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    try {
+      if (!isAuthenticated || !token) {
+        await Promise.resolve(login());
+        return;
+      }
+      const userId = resolveUserId();
+      if (!userId) {
+        // As a last resort, attempt login again to refresh identity
+        await Promise.resolve(login());
+        return;
+      }
+      const url = `https://register.usuals.ai/purchase/${encodeURIComponent(userId)}/${encodeURIComponent(token)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Failed to open pricing page", err);
     }
   };
 
@@ -121,6 +172,7 @@ const Header = () => {
         <div className="flex items-center gap-2">
           <a
             href="#"
+            onClick={handlePricingClick}
             className="hidden rounded-md px-3 py-1.5 text-sm text-[#F9D312] hover:text-[#F9D312] md:block"
           >
             Pricing

@@ -1,4 +1,7 @@
+"use client"
+
 import React from "react";
+import Image from "next/image";
 import { getVideoUrl } from "@/lib/video-utils";
 import { useVideoPlayer } from "@/hooks/useVideoPlayer";
 import VideoControls from "./VideoControls";
@@ -14,6 +17,7 @@ interface PreviewProps {
   }>;
   currentVideoIndex?: number;
   onNavigateVideo?: (direction: 'next' | 'prev') => void;
+  isSolanaTemplate?: boolean;
 }
 
 const Preview = ({
@@ -23,6 +27,7 @@ const Preview = ({
   generatedVideos = [],
   currentVideoIndex = 0,
   onNavigateVideo,
+  isSolanaTemplate = false,
 }: PreviewProps) => {
   const { videoRef, state, controls, formatTime } = useVideoPlayer();
 
@@ -35,10 +40,30 @@ const Preview = ({
       : undefined;
   const hasMultipleVideos = generatedVideos.length > 1;
 
+  // For Solana templates, check if we're showing the template (image) or generated video
+  const isShowingTemplate = currentVideo?.isTemplate || (!currentVideo && videoUrl);
+  const shouldShowImage = isSolanaTemplate && isShowingTemplate;
+
   return (
     <div className="flex flex-col bg-[#111215] h-[20vh]">
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="relative w-full max-w-4xl aspect-video">
+          {/* Segmented Pagination Bar - Above preview */}
+          {generatedVideos.length > 1 && (
+            <div className="absolute top-[-13px] left-0 right-0">
+              <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                <div className="w-full h-full flex">
+                  {generatedVideos.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`h-full ${idx === currentVideoIndex ? 'bg-[#F9D312] opacity-100' : 'bg-[#F9D312] opacity-15'} ${idx !== generatedVideos.length - 1 ? 'mr-1' : ''}`}
+                      style={{ width: `${100 / generatedVideos.length}%` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           {/* Side Navigation Arrows - Only show if there are multiple videos */}
           {hasMultipleVideos && onNavigateVideo && (
             <>
@@ -94,8 +119,19 @@ const Preview = ({
             onMouseEnter={() => controls.setHovered(true)}
             onMouseLeave={() => controls.setHovered(false)}
           >
-            {/* Video Element */}
-            {displayVideoUrl ? (
+            {/* Video Element or Image for Solana templates */}
+            {shouldShowImage ? (
+              <Image
+                src={displayVideoUrl || videoUrl || ''}
+                alt={templateDescription || 'Solana template'}
+                fill
+                className="object-cover"
+                onError={(e) => {
+                  console.error("🖼️ Preview: Image load error:", e);
+                  console.error("🖼️ Preview: Image URL that failed:", displayVideoUrl || videoUrl);
+                }}
+              />
+            ) : displayVideoUrl ? (
               <video
                 ref={videoRef}
                 src={displayVideoUrl}
@@ -137,13 +173,15 @@ const Preview = ({
               </div>
             )}
 
-            {/* Video Controls */}
-            <VideoControls
-              state={state}
-              controls={controls}
-              formatTime={formatTime}
-              hasVideo={!!displayVideoUrl}
-            />
+            {/* Video Controls - Only show for videos, not images */}
+            {!shouldShowImage && (
+              <VideoControls
+                state={state}
+                controls={controls}
+                formatTime={formatTime}
+                hasVideo={!!displayVideoUrl}
+              />
+            )}
           </div>
         </div>
       </div>

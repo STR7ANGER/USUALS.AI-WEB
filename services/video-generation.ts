@@ -26,6 +26,20 @@ export interface GeneratedVideo {
   createdAt: string;
 }
 
+export interface ImageToVideoRequest {
+  imageS3Key: string;
+  segmentId: string;
+  prompt: string;
+  duration: string;
+  projectId: string;
+}
+
+export interface ImageToVideoResponse {
+  s3Key: string;
+  segmentId: string;
+  description: string;
+}
+
 export class VideoGenerationService {
   private static baseUrl = `${API_BASE_URL}/prompt-optimizer`;
 
@@ -53,6 +67,32 @@ export class VideoGenerationService {
       return data;
     } catch (error) {
       logError(error, 'VideoGenerationService.generateVideo');
+      throw error;
+    }
+  }
+
+  // Image to video generation for Solana templates
+  static async generateImageToVideo(token: string, request: ImageToVideoRequest): Promise<ImageToVideoResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/video-gen/image-to-video`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logError(`Failed to generate image-to-video: ${response.status} ${response.statusText}`, 'VideoGenerationService');
+        throw new Error(`Failed to generate image-to-video: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      logError(error, 'VideoGenerationService.generateImageToVideo');
       throw error;
     }
   }

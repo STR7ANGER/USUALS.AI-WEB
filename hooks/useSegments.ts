@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { VideoTemplate } from '@/services/template';
-import { GeneratedVideo, VideoGenerationService, GenerateVideoRequest } from '@/services/video-generation';
+import { GeneratedVideo, VideoGenerationService, GenerateVideoRequest, ImageToVideoRequest } from '@/services/video-generation';
 import { SegmentService, Segment as BackendSegment } from '@/services/segment';
 import { useAuth } from './useAuth';
 import { MAX_SEGMENTS } from '../lib/constants';
@@ -33,6 +33,7 @@ export interface UseSegmentsReturn {
   selectSegment: (segmentId: string) => void;
   setSegmentTemplate: (segmentId: string, template: VideoTemplate) => void;
   generateVideo: (segmentId: string, description: string) => Promise<void>;
+  generateSolanaVideo: (segmentId: string, description: string, imageS3Key: string) => Promise<void>;
   navigateVideo: (segmentId: string, direction: 'next' | 'prev') => void;
   canCreateSegment: boolean;
   isChatEnabled: (segmentId: string) => boolean;
@@ -212,6 +213,80 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
     }
   }, [token, projectId, segments]);
 
+  const generateSolanaVideo = useCallback(async (segmentId: string, description: string, imageS3Key: string) => {
+    if (!token || !projectId) {
+      setError('Authentication or project ID required');
+      return;
+    }
+
+    const segment = segments.find(s => s.id === segmentId);
+    if (!segment || !segment.template) {
+      setError('Segment template required for video generation');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Combine template subtitle with user description for Solana
+      const combinedPrompt = `${segment.template.description} ${description}`;
+
+      // Normalize imageS3Key: ensure we only send the key (no URL)
+      let normalizedImageKey = imageS3Key;
+      try {
+        if (typeof imageS3Key === 'string' && imageS3Key.startsWith('http')) {
+          const url = new URL(imageS3Key);
+          normalizedImageKey = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname;
+        } else if (typeof imageS3Key === 'string' && imageS3Key.startsWith('/')) {
+          normalizedImageKey = imageS3Key.slice(1);
+        }
+      } catch {
+        // If URL parsing fails, fall back to provided string as-is
+      }
+
+      const request: ImageToVideoRequest = {
+        imageS3Key: normalizedImageKey,
+        segmentId,
+        prompt: combinedPrompt,
+        duration: '8s',
+        projectId
+      };
+
+      const response = await VideoGenerationService.generateImageToVideo(token, request);
+
+      const newVideo: GeneratedVideo = {
+        id: `${segmentId}-video-${Date.now()}`,
+        s3Key: response.s3Key,
+        description: response.description,
+        optimizedPrompt: combinedPrompt,
+        segmentId: response.segmentId,
+        createdAt: new Date().toISOString()
+      };
+
+      setSegments(prev => prev.map(s => {
+        if (s.id === segmentId) {
+          const hasTemplate = !!s.template;
+          const newVideoIndex = s.videos.length + (hasTemplate ? 1 : 0); // Account for template being first
+          
+          return {
+            ...s,
+            videos: [...s.videos, newVideo],
+            currentVideoIndex: newVideoIndex // Point to the new video
+          };
+        }
+        return s;
+      }));
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate Solana video';
+      setError(errorMessage);
+      console.error('Error generating Solana video:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, projectId, segments]);
+
   const navigateVideo = useCallback((segmentId: string, direction: 'next' | 'prev') => {
     setSegments(prev => prev.map(segment => {
       if (segment.id === segmentId) {
@@ -255,6 +330,7 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
     selectSegment,
     setSegmentTemplate,
     generateVideo,
+    generateSolanaVideo,
     navigateVideo,
     canCreateSegment,
     isChatEnabled

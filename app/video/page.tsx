@@ -29,6 +29,7 @@ const VideoPageContent = () => {
   const videoUrl = searchParams?.get('videoUrl')
   const templateDescription = searchParams?.get('templateDescription')
   const templateId = searchParams?.get('templateId')
+  const imageS3Key = searchParams?.get('imageS3Key')
   
   // Use different hooks based on whether this is an existing project or new project
   const existingProjectData = useExistingProject(
@@ -182,12 +183,12 @@ const VideoPageContent = () => {
           }
           
           // Fallback: create template object from URL parameters
-          if (videoUrl && templateDescription) {
+          if ((videoUrl || imageS3Key) && templateDescription) {
             const templateFromUrl: VideoTemplate = {
               id: templateId || 'url-template',
               description: templateDescription,
               jsonPrompt: '{}', // Default empty JSON prompt
-              s3Key: videoUrl,
+              s3Key: imageS3Key || videoUrl || '', // Use imageS3Key for Solana templates, videoUrl for others
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString()
             }
@@ -204,7 +205,7 @@ const VideoPageContent = () => {
     if (!isExisting && segments.length > 0 && !segments[0].template) {
       applyInitialTemplate()
     }
-  }, [isExisting, mounted, isAuthenticated, token, segments.length, templateId, videoUrl, templateDescription, newProjectData])
+  }, [isExisting, mounted, isAuthenticated, token, segments.length, templateId, videoUrl, imageS3Key, templateDescription, newProjectData])
 
   // Handle template selection from sidebar (only for new projects)
   const handleTemplateSelect = React.useCallback((template: { id: string; description: string; jsonPrompt: string; s3Key: string }) => {
@@ -225,6 +226,15 @@ const VideoPageContent = () => {
     }
   }, [isExisting, segments, activeSegmentIndex, newProjectData])
 
+  // Check if current template is Solana
+  const isSolanaTemplate = React.useMemo(() => {
+    const currentActiveSegment = isExisting 
+      ? (segments.length > 0 ? segments[activeSegmentIndex] : null)
+      : newProjectData.activeSegment;
+    
+    return currentActiveSegment?.template?.id?.startsWith('solana-') || false;
+  }, [isExisting, segments, activeSegmentIndex, newProjectData.activeSegment]);
+
   // Handle chat message submission (only for new projects)
   const handleChatMessage = React.useCallback(async (message: string) => {
     const currentActiveSegment = isExisting 
@@ -232,9 +242,16 @@ const VideoPageContent = () => {
       : newProjectData.activeSegment;
       
     if (!isExisting && currentActiveSegment && newProjectData.isChatEnabled(currentActiveSegment.id)) {
-      await newProjectData.generateVideo(currentActiveSegment.id, message)
+      if (isSolanaTemplate && currentActiveSegment.template) {
+        // For Solana templates, use image-to-video generation
+        const imageS3Key = currentActiveSegment.template.s3Key; // This should be the image path
+        await newProjectData.generateSolanaVideo(currentActiveSegment.id, message, imageS3Key);
+      } else {
+        // For regular templates, use normal video generation
+        await newProjectData.generateVideo(currentActiveSegment.id, message);
+      }
     }
-  }, [isExisting, segments, activeSegmentIndex, newProjectData])
+  }, [isExisting, segments, activeSegmentIndex, newProjectData, isSolanaTemplate])
 
   // Handle video navigation
   const handleVideoNavigation = React.useCallback((direction: 'next' | 'prev') => {
@@ -345,6 +362,7 @@ const VideoPageContent = () => {
               generatedVideos={allVideos}
               currentVideoIndex={previewVideoIndex}
               onNavigateVideo={handleVideoNavigation}
+              isSolanaTemplate={isSolanaTemplate}
             />
           </div>
           <Segement 
@@ -358,6 +376,8 @@ const VideoPageContent = () => {
             isEnabled={!isExisting && newProjectData.activeSegment ? newProjectData.isChatEnabled(newProjectData.activeSegment.id) : false}
             onSendMessage={handleChatMessage}
             loading={segmentLoading}
+            isSolanaTemplate={isSolanaTemplate}
+            defaultMessage={isSolanaTemplate ? 'telling about brand name : Flash trade \nspeech :Flash Trade is the fastest, most intuitive trading platform designed for modern investors. With real-time insights, powerful tools, and a sleek interface, you stay ahead of the market—every second counts with Flash Trade' : undefined}
           />
         </div>
       </div>

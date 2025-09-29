@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TemplateService, VideoTemplate } from '../services/template';
-import { useAuth } from './useAuth';
 import { ERROR_MESSAGES } from '../lib/constants';
 import { handleApiError } from '../lib/error-handler';
 
@@ -15,7 +14,6 @@ export interface UseTrendingReturn {
 }
 
 export const useTrending = (): UseTrendingReturn => {
-  const { token, isAuthenticated } = useAuth();
   const [trendingTemplates, setTrendingTemplates] = useState<VideoTemplate[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,11 +23,6 @@ export const useTrending = (): UseTrendingReturn => {
   const initialFetchCalled = useRef<boolean>(false);
 
   const fetchTrendingTemplates = useCallback(async (description: string = "Trending") => {
-
-    if (!token || !isAuthenticated) {
-      setError(ERROR_MESSAGES.AUTH_REQUIRED);
-      return;
-    }
 
     // Only prevent duplicate calls for the initial "Trending" call
     if (description === "Trending" && initialFetchCalled.current && hasFetched) {
@@ -51,7 +44,7 @@ export const useTrending = (): UseTrendingReturn => {
       setLoading(true);
       setError(null);
 
-      const trendingData = await TemplateService.fetchTrendingTemplates(token, description);
+      const trendingData = await TemplateService.fetchTrendingTemplates(description);
       // Take all templates (up to 4)
       setTrendingTemplates(trendingData.templates.slice(0, 4));
       setHasFetched(true);
@@ -61,7 +54,7 @@ export const useTrending = (): UseTrendingReturn => {
     } finally {
       setLoading(false);
     }
-  }, [token, isAuthenticated]);
+  }, []);
 
   const fetchByDescription = useCallback(async (description: string) => {
     await fetchTrendingTemplates(description);
@@ -75,16 +68,7 @@ export const useTrending = (): UseTrendingReturn => {
     // Don't call fetchTrendingTemplates here - let useEffect handle it
   }, []);
 
-  // Reset state when authentication changes
-  useEffect(() => {
-    if (!isAuthenticated || !token) {
-      // Reset state when not authenticated
-      setTrendingTemplates([]);
-      setError(null);
-      setHasFetched(false);
-      initialFetchCalled.current = false; // Reset the ref
-    }
-  }, [isAuthenticated, token]);
+  // Nothing to do on auth changes anymore
 
   return {
     trendingTemplates,

@@ -24,7 +24,6 @@ export interface TrendingTemplatesResponse {
 }
 
 export interface FetchTemplatesParams {
-  token: string;
   page?: number;
   limit?: number;
 }
@@ -32,13 +31,12 @@ export interface FetchTemplatesParams {
 export class TemplateService {
   private static baseUrl = `${API_BASE_URL}/video-templates`;
 
-  static async fetchTemplates({ token, page = 1, limit = 20 }: FetchTemplatesParams): Promise<TemplatesResponse> {
+  static async fetchTemplates({ page = 1, limit = 20 }: FetchTemplatesParams): Promise<TemplatesResponse> {
     try {
       const url = `${this.baseUrl}?page=${page}&limit=${limit}`;
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -59,12 +57,11 @@ export class TemplateService {
   }
 
 
-  static async fetchTrendingTemplates(token: string, description: string = "Trending"): Promise<TrendingTemplatesResponse> {
+  static async fetchTrendingTemplates(description: string = "Trending"): Promise<TrendingTemplatesResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/find-similar`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

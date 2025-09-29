@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TemplateService, VideoTemplate, TemplatesResponse } from '../services/template';
-import { useAuth } from './useAuth';
 import { ERROR_MESSAGES, DEFAULT_PAGE_SIZE } from '../lib/constants';
 import { handleApiError } from '../lib/error-handler';
 
@@ -16,7 +15,6 @@ export interface UseTemplatesReturn {
 }
 
 export const useTemplates = (): UseTemplatesReturn => {
-  const { token, isAuthenticated } = useAuth();
   const [templates, setTemplates] = useState<VideoTemplate[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,11 +24,6 @@ export const useTemplates = (): UseTemplatesReturn => {
   const [totalPages, setTotalPages] = useState<number>(0);
 
   const fetchTemplates = useCallback(async (page: number = 1, append: boolean = false) => {
-    if (!token || !isAuthenticated) {
-      setError(ERROR_MESSAGES.AUTH_REQUIRED);
-      return;
-    }
-
     // Avoid concurrent calls only
     if (loading) return;
 
@@ -38,7 +31,7 @@ export const useTemplates = (): UseTemplatesReturn => {
       setLoading(true);
       setError(null);
 
-      const response = await TemplateService.fetchTemplates({ token, page, limit: DEFAULT_PAGE_SIZE });
+      const response = await TemplateService.fetchTemplates({ page, limit: DEFAULT_PAGE_SIZE });
       
       if (append) {
         setTemplates(prev => [...prev, ...response.data]);
@@ -56,7 +49,7 @@ export const useTemplates = (): UseTemplatesReturn => {
     } finally {
       setLoading(false);
     }
-  }, [token, isAuthenticated]);
+  }, []);
 
   const refresh = useCallback(async () => {
     setTemplates([]);
@@ -74,21 +67,10 @@ export const useTemplates = (): UseTemplatesReturn => {
     await fetchTemplates(nextPage, true);
   }, [hasMore, loading, currentPage, fetchTemplates]);
 
-  // Initial load when authenticated
+  // Initial load on mount
   useEffect(() => {
-    if (isAuthenticated && token) {
-      // Only fetch once on mount/auth change
-      if (!hasFetched && !loading) fetchTemplates(1, false);
-    } else {
-      // Reset state when not authenticated
-      setTemplates([]);
-      setError(null);
-      setHasFetched(false);
-      setCurrentPage(1);
-      setHasMore(false);
-      setTotalPages(0);
-    }
-  }, [isAuthenticated, token, fetchTemplates, hasFetched, loading]);
+    if (!hasFetched && !loading) fetchTemplates(1, false);
+  }, [fetchTemplates, hasFetched, loading]);
 
   return {
     templates,
