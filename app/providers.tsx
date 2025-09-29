@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Handle OAuth callback in browser mode
   useEffect(() => {
     if (!isRunningInBrowser()) return;
-    if (window.location.pathname === "/auth/google-redirect") {
+    if (window.location.pathname === "/auth/web/google") {
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
       const accessToken = params.get("access_token") || params.get("token");
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setLoading(true);
           let tokenData: { success?: boolean; access_token?: string; user?: AuthUser } | null = null;
           if (code && !accessToken) {
-            const res = await fetch(`${API_BASE_URL}/auth/google-redirect?code=${encodeURIComponent(code)}`);
+            const res = await fetch(`${API_BASE_URL}/auth//web/google-redirect?code=${encodeURIComponent(code)}`);
             if (!res.ok) throw new Error("Token exchange failed");
             tokenData = await res.json();
           } else {
@@ -116,8 +116,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setError(null);
       setLoading(true);
-      const redirectUri = `${BASE_URL}/auth/google-redirect`;
-      window.location.href = `${API_BASE_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const redirectUri = `${BASE_URL}/auth/web/google`;
+      window.location.href = `${API_BASE_URL}/auth/web/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
     } catch (e: unknown) {
       console.error("Login failed:", e);
       setError(e instanceof Error ? e.message : "Login failed");
