@@ -52,7 +52,7 @@ const Header = () => {
 
   const resolveUserId = (): string | null => {
     // Try common fields on user object first
-    const potential = (user && (user as any)) || {};
+    const potential = user || {};
     const directId = potential.id || potential.userId || potential.uid || potential.sub;
     if (typeof directId === "string" && directId.length > 0) return directId;
     // Fallback to decoding JWT

@@ -9,6 +9,11 @@ export interface AuthUser {
   avatar?: string | null;
   picture?: string | null;
   image?: string | null;
+  // Common id fields we may receive from different identity providers
+  id?: string | null;
+  userId?: string | null;
+  uid?: string | null;
+  sub?: string | null;
   [key: string]: unknown;
 }
 
