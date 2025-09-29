@@ -69,8 +69,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error("OAuth callback handling failed", err);
           setError("Failed to complete login. Please try again.");
         } finally {
-          // Redirect to BASE_URL after successful login
-          window.location.href = BASE_URL;
+          // Redirect to the current domain root after successful login
+          window.location.href = window.location.origin;
           setLoading(false);
         }
       };
