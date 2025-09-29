@@ -10,6 +10,11 @@ const UserProfile = () => {
   const dropdownRef = React.useRef<HTMLDivElement | null>(null)
   const [imageError, setImageError] = React.useState(false)
 
+  // Reset image error state if avatar url changes
+  React.useEffect(() => {
+    setImageError(false)
+  }, [avatarUrl])
+
   React.useEffect(() => {
     const onClickOutside = (event: MouseEvent) => {
       if (!dropdownRef.current) return
@@ -38,6 +43,7 @@ const UserProfile = () => {
             src={avatarUrl as string}
             alt="Profile"
             className="w-8 h-8 rounded-full object-cover ring-1 ring-white/10"
+            referrerPolicy="no-referrer"
             onError={() => setImageError(true)}
           />
         ) : (
@@ -62,6 +68,7 @@ const UserProfile = () => {
                 src={avatarUrl as string}
                 alt="Profile"
                 className="w-10 h-10 rounded-full object-cover ring-1 ring-white/10"
+                referrerPolicy="no-referrer"
                 onError={() => setImageError(true)}
               />
             ) : (
