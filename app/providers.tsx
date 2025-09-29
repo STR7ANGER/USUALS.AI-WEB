@@ -42,6 +42,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Handle token in query string on any route (e.g., /home?token=...)
+  useEffect(() => {
+    if (!isRunningInBrowser()) return;
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get("token") || params.get("access_token");
+    if (!accessToken) return;
+
+    try {
+      setLoading(true);
+
+      // Best-effort decode of JWT payload to populate basic user info if present
+      const decodeJwtPayload = (jwt: string): AuthUser | null => {
+        try {
+          const parts = jwt.split(".");
+          if (parts.length < 2) return null;
+          const base64Url = parts[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split("")
+              .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+              .join("")
+          );
+          const payload = JSON.parse(jsonPayload) as Record<string, unknown>;
+          const name = (payload["name"] as string) || undefined;
+          const email = (payload["email"] as string) || undefined;
+          return name || email ? { name, email } : null;
+        } catch {
+          return null;
+        }
+      };
+
+      const decodedUser = decodeJwtPayload(accessToken);
+      handleAuthSuccess({ access_token: accessToken, user: decodedUser });
+    } catch (e) {
+      console.error("Token handling failed:", e);
+      setError("Failed to complete login. Please try again.");
+    } finally {
+      // Redirect to the current domain root after successful token capture
+      window.location.href = window.location.origin;
+      setLoading(false);
+    }
+  }, []);
+
   // Handle OAuth callback in browser mode
   useEffect(() => {
     if (!isRunningInBrowser()) return;
