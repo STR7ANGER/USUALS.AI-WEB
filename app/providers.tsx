@@ -2,15 +2,25 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { API_BASE_URL, BASE_URL } from '../lib/constants';
+import { fetchAuthStatus } from '../services/auth';
 
 export interface AuthUser {
-  name?: string | null;
+  id?: string | null;
   email?: string | null;
+  name?: string | null;
   avatar?: string | null;
   picture?: string | null;
   image?: string | null;
+  googleId?: string | null;
+  createdAt?: string | null;
+  credits?: string | null;
+  creditVersion?: number | null;
+  totalCreditsEarned?: string | null;
+  totalCreditsSpent?: string | null;
+  lastCreditUpdate?: string | null;
+  userContext?: unknown[] | null;
+  lastProjectContextHash?: string | null;
   // Common id fields we may receive from different identity providers
-  id?: string | null;
   userId?: string | null;
   uid?: string | null;
   sub?: string | null;
@@ -47,6 +57,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleAuthSuccess = useCallback(async (authData: { access_token?: string | null; user?: AuthUser | null }) => {
+    if (authData.access_token) {
+      setToken(authData.access_token);
+      setError(null);
+      
+      try {
+        // Fetch user data from backend
+        const authStatus = await fetchAuthStatus(authData.access_token);
+        if (authStatus.success && authStatus.user) {
+          setUser(authStatus.user);
+        } else {
+          // Fallback to the user data from authData if backend call fails
+          setUser(authData.user ?? null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data from backend:', error);
+        // Fallback to the user data from authData if backend call fails
+        setUser(authData.user ?? null);
+      }
+    }
+  }, []);
+
   // Handle token in query string on any route (e.g., /home?token=...)
   useEffect(() => {
     if (!isRunningInBrowser()) return;
@@ -54,42 +86,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const accessToken = params.get("token") || params.get("access_token");
     if (!accessToken) return;
 
-    try {
-      setLoading(true);
+    const handleTokenAuth = async () => {
+      try {
+        setLoading(true);
 
-      // Best-effort decode of JWT payload to populate basic user info if present
-      const decodeJwtPayload = (jwt: string): AuthUser | null => {
-        try {
-          const parts = jwt.split(".");
-          if (parts.length < 2) return null;
-          const base64Url = parts[1];
-          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-          const jsonPayload = decodeURIComponent(
-            atob(base64)
-              .split("")
-              .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-              .join("")
-          );
-          const payload = JSON.parse(jsonPayload) as Record<string, unknown>;
-          const name = (payload["name"] as string) || undefined;
-          const email = (payload["email"] as string) || undefined;
-          return name || email ? { name, email } : null;
-        } catch {
-          return null;
-        }
-      };
+        // Best-effort decode of JWT payload to populate basic user info if present
+        const decodeJwtPayload = (jwt: string): AuthUser | null => {
+          try {
+            const parts = jwt.split(".");
+            if (parts.length < 2) return null;
+            const base64Url = parts[1];
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+            const jsonPayload = decodeURIComponent(
+              atob(base64)
+                .split("")
+                .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                .join("")
+            );
+            const payload = JSON.parse(jsonPayload) as Record<string, unknown>;
+            const name = (payload["name"] as string) || undefined;
+            const email = (payload["email"] as string) || undefined;
+            return name || email ? { name, email } : null;
+          } catch {
+            return null;
+          }
+        };
 
-      const decodedUser = decodeJwtPayload(accessToken);
-      handleAuthSuccess({ access_token: accessToken, user: decodedUser });
-    } catch (e) {
-      console.error("Token handling failed:", e);
-      setError("Failed to complete login. Please try again.");
-    } finally {
-      // Redirect to the current domain root after successful token capture
-      window.location.href = window.location.origin;
-      setLoading(false);
-    }
-  }, []);
+        const decodedUser = decodeJwtPayload(accessToken);
+        await handleAuthSuccess({ access_token: accessToken, user: decodedUser });
+      } catch (e) {
+        console.error("Token handling failed:", e);
+        setError("Failed to complete login. Please try again.");
+      } finally {
+        // Redirect to the current domain root after successful token capture
+        window.location.href = window.location.origin;
+        setLoading(false);
+      }
+    };
+
+    handleTokenAuth();
+  }, [handleAuthSuccess]);
 
   // Handle OAuth callback in browser mode
   useEffect(() => {
@@ -112,7 +148,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
 
           if (tokenData && tokenData.success && tokenData.access_token) {
-            handleAuthSuccess({ access_token: tokenData.access_token, user: tokenData.user });
+            await handleAuthSuccess({ access_token: tokenData.access_token, user: tokenData.user });
           }
         } catch (err) {
           console.error("OAuth callback handling failed", err);
@@ -126,7 +162,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       finalizeWebLogin();
     }
-  }, []);
+  }, [handleAuthSuccess]);
 
   // Persist user to localStorage
   useEffect(() => {
@@ -151,14 +187,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.removeItem("authToken");
     }
   }, [token]);
-
-  const handleAuthSuccess = useCallback((authData: { access_token?: string | null; user?: AuthUser | null }) => {
-    if (authData.access_token) {
-      setToken(authData.access_token);
-      setUser(authData.user ?? null);
-      setError(null);
-    }
-  }, []);
 
   const login = useCallback(async () => {
     if (!isRunningInBrowser()) return;

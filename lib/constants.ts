@@ -7,7 +7,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 export const CLOUDFRONT_URL = process.env.NEXT_PUBLIC_CLOUDFRONT_URL;
 
 // Base URL Configuration
-export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080';
 
 // Application Limits
 export const MAX_SEGMENTS = 5;
