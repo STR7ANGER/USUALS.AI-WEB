@@ -27,11 +27,15 @@ export interface GeneratedVideo {
 }
 
 export interface ImageToVideoRequest {
-  imageS3Key: string;
+  imageS3Key: string; // can be full URL or s3 key
   segmentId: string;
   prompt: string;
   duration: string;
   projectId: string;
+  // Optional overrides; defaults applied if omitted
+  aspect_ratio?: string; // e.g., '16:9'
+  resolution?: string; // e.g., '720p'
+  generate_audio?: boolean;
 }
 
 export interface ImageToVideoResponse {
@@ -74,13 +78,37 @@ export class VideoGenerationService {
   // Image to video generation for Solana templates
   static async generateImageToVideo(token: string, request: ImageToVideoRequest): Promise<ImageToVideoResponse> {
     try {
+      // Determine if imageS3Key is a URL; if so, send via header and keep body payload
+      const headers: Record<string, string> = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
+      let bodyImageKey = request.imageS3Key;
+      if (typeof request.imageS3Key === 'string' && request.imageS3Key.startsWith('http')) {
+        headers['X-Image-Url'] = request.imageS3Key;
+        // Try to also provide the path as key when possible
+        try {
+          const url = new URL(request.imageS3Key);
+          bodyImageKey = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname;
+        } catch {
+          // Keep original if parsing fails
+          bodyImageKey = request.imageS3Key;
+        }
+      }
+
+      const payload: ImageToVideoRequest = {
+        ...request,
+        imageS3Key: bodyImageKey,
+        generate_audio: request.generate_audio ?? true,
+        resolution: request.resolution ?? '720p',
+        aspect_ratio: request.aspect_ratio ?? '16:9',
+      };
+
       const response = await fetch(`${API_BASE_URL}/video-gen/image-to-video`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
+        headers,
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
