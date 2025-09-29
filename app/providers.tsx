@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setLoading(true);
           let tokenData: { success?: boolean; access_token?: string; user?: AuthUser } | null = null;
           if (code && !accessToken) {
-            const res = await fetch(`${API_BASE_URL}/auth//web/google-redirect?code=${encodeURIComponent(code)}`);
+            const res = await fetch(`${API_BASE_URL}/auth/web/google?code=${encodeURIComponent(code)}`);
             if (!res.ok) throw new Error("Token exchange failed");
             tokenData = await res.json();
           } else {
