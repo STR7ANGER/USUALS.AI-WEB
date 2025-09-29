@@ -1,6 +1,7 @@
 import React from "react";
 import { useSearchParams } from 'next/navigation'
 import AuthButton from "../AuthButton";
+import { useCredits } from "../../hooks/useCredits";
 
 interface HeaderProps {
   projectName?: string;
@@ -10,6 +11,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ projectName: propProjectName, onDownloadClick }) => {
   const searchParams = useSearchParams()
   const projectName = propProjectName || searchParams?.get('name') || 'Untitled'
+  const { credits } = useCredits();
   return (
     <div className="bg-[#111215]  px-6 py-3">
       <div className="flex items-center justify-between">
@@ -68,7 +70,7 @@ const Header: React.FC<HeaderProps> = ({ projectName: propProjectName, onDownloa
               />
             </svg>
 
-            <span>2000</span>
+            <span>{credits ?? '—'}</span>
           </div>
 
           {/* Download button */}
