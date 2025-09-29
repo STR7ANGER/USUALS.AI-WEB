@@ -1,4 +1,4 @@
-import { API_BASE_URL, CLOUDFRONT_URL } from '../lib/constants';
+import { API_BASE_URL } from '../lib/constants';
 import { getVideoUrl } from '../lib/video-utils';
 import { logError } from '../lib/error-handler';
 
@@ -31,10 +31,10 @@ export interface ImageToVideoRequest {
   segmentId: string;
   prompt: string;
   duration: string;
+  projectId: string;
   aspect_ratio?: string;
   resolution?: string;
   generate_audio?: boolean;
-  projectId: string;
 }
 
 export interface ImageToVideoResponse {
@@ -77,30 +77,13 @@ export class VideoGenerationService {
   // Image to video generation for Solana templates
   static async generateImageToVideo(token: string, request: ImageToVideoRequest): Promise<ImageToVideoResponse> {
     try {
-      // Extract image URL from CloudFront URL
-      const imageUrl = request.imageS3Key.startsWith('http') 
-        ? request.imageS3Key 
-        : `${CLOUDFRONT_URL}/${request.imageS3Key}`;
-
-      // Prepare payload with defaults
-      const payload = {
-        segmentId: request.segmentId,
-        prompt: request.prompt,
-        duration: request.duration,
-        aspect_ratio: request.aspect_ratio || "16:9",
-        resolution: request.resolution || "720p",
-        generate_audio: request.generate_audio !== undefined ? request.generate_audio : true,
-        projectId: request.projectId
-      };
-
       const response = await fetch(`${API_BASE_URL}/video-gen/image-to-video`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'X-Image-URL': imageUrl, // Send image URL as header
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {
