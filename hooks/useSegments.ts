@@ -232,16 +232,25 @@ export const useSegments = (projectId?: string, initialTemplateData?: { template
       // Combine template subtitle with user description for Solana
       const combinedPrompt = `${segment.template.description} ${description}`;
 
+      // Normalize imageS3Key: ensure we only send the key (no URL)
+      let normalizedImageKey = imageS3Key;
+      try {
+        if (typeof imageS3Key === 'string' && imageS3Key.startsWith('http')) {
+          const url = new URL(imageS3Key);
+          normalizedImageKey = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname;
+        } else if (typeof imageS3Key === 'string' && imageS3Key.startsWith('/')) {
+          normalizedImageKey = imageS3Key.slice(1);
+        }
+      } catch {
+        // If URL parsing fails, fall back to provided string as-is
+      }
+
       const request: ImageToVideoRequest = {
-        imageS3Key: imageS3Key,
+        imageS3Key: normalizedImageKey,
         segmentId,
         prompt: combinedPrompt,
         duration: '8s',
-        projectId,
-        // Defaults can be overridden by callers if needed
-        aspect_ratio: '16:9',
-        resolution: '720p',
-        generate_audio: true,
+        projectId
       };
 
       const response = await VideoGenerationService.generateImageToVideo(token, request);

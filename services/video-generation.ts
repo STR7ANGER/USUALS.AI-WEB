@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../lib/constants';
+import { API_BASE_URL, CLOUDFRONT_URL } from '../lib/constants';
 import { getVideoUrl } from '../lib/video-utils';
 import { logError } from '../lib/error-handler';
 
@@ -27,15 +27,14 @@ export interface GeneratedVideo {
 }
 
 export interface ImageToVideoRequest {
-  imageS3Key: string; // can be full URL or s3 key
+  imageS3Key: string;
   segmentId: string;
   prompt: string;
   duration: string;
-  projectId: string;
-  // Optional overrides; defaults applied if omitted
-  aspect_ratio?: string; // e.g., '16:9'
-  resolution?: string; // e.g., '720p'
+  aspect_ratio?: string;
+  resolution?: string;
   generate_audio?: boolean;
+  projectId: string;
 }
 
 export interface ImageToVideoResponse {
@@ -78,36 +77,29 @@ export class VideoGenerationService {
   // Image to video generation for Solana templates
   static async generateImageToVideo(token: string, request: ImageToVideoRequest): Promise<ImageToVideoResponse> {
     try {
-      // Determine if imageS3Key is a URL; if so, send via header and keep body payload
-      const headers: Record<string, string> = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      };
+      // Extract image URL from CloudFront URL
+      const imageUrl = request.imageS3Key.startsWith('http') 
+        ? request.imageS3Key 
+        : `${CLOUDFRONT_URL}/${request.imageS3Key}`;
 
-      let bodyImageKey = request.imageS3Key;
-      if (typeof request.imageS3Key === 'string' && request.imageS3Key.startsWith('http')) {
-        headers['X-Image-Url'] = request.imageS3Key;
-        // Try to also provide the path as key when possible
-        try {
-          const url = new URL(request.imageS3Key);
-          bodyImageKey = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname;
-        } catch {
-          // Keep original if parsing fails
-          bodyImageKey = request.imageS3Key;
-        }
-      }
-
-      const payload: ImageToVideoRequest = {
-        ...request,
-        imageS3Key: bodyImageKey,
-        generate_audio: request.generate_audio ?? true,
-        resolution: request.resolution ?? '720p',
-        aspect_ratio: request.aspect_ratio ?? '16:9',
+      // Prepare payload with defaults
+      const payload = {
+        segmentId: request.segmentId,
+        prompt: request.prompt,
+        duration: request.duration,
+        aspect_ratio: request.aspect_ratio || "16:9",
+        resolution: request.resolution || "720p",
+        generate_audio: request.generate_audio !== undefined ? request.generate_audio : true,
+        projectId: request.projectId
       };
 
       const response = await fetch(`${API_BASE_URL}/video-gen/image-to-video`, {
         method: 'POST',
-        headers,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'X-Image-URL': imageUrl, // Send image URL as header
+        },
         body: JSON.stringify(payload),
       });
 
